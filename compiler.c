@@ -1,5 +1,3 @@
-
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,7 +20,7 @@ typedef struct {
 
 char source_buffer[8192];
 Token lexed_buffer[2048];
-int cursor = 0;
+int lexed_count=0;
 int file_to_buffer(char* filename);
 
 
@@ -30,7 +28,9 @@ int file_to_buffer(char* filename);
 bool is_letter(char c);
 bool is_digit(char c);
 bool is_seperator(char c);
-void copy_to_lexed_buffer(int start, int end, int word_count);
+void copy_to_lexed_buffer(int start, int end, int word_count); 
+int lexer();
+void lexer_debug();
 
 int main(int args,char *argv[]){
   if(args<2){
@@ -59,7 +59,9 @@ int main(int args,char *argv[]){
   input_file[dot_index+1]='s';
   input_file[dot_index+2]='\0';
   if(file_to_buffer(src_file))return 1;
-  
+  if(lexer())return 1;
+
+
   FILE  *outputptr;
   outputptr = fopen(input_file,"w");
   fprintf(outputptr, ".data\n");
@@ -70,6 +72,7 @@ int main(int args,char *argv[]){
   fprintf(outputptr, "li $v0, 10\n");
   fprintf(outputptr, "syscall\n");
   
+  lexer_debug();
   return 0;
 }
 
@@ -91,46 +94,47 @@ int file_to_buffer(char* filename){
   return 0;
 }
 
-int lexer(int file_size){
+int lexer(){
   int line_count=0;
-  int lexed_count=0;
+  char c=0;
+  char c2=source_buffer[0];
   int i=0;
-  while(i<file_size){
-    char c=source_buffer[i];
-    char c2=source_buffer[i+1];
+  while(c2!='\0'){
+    c=source_buffer[i];
+    c2=source_buffer[i+1];
     if(c==' '){
       i++;
       continue;
-    }
-    
-    if(c=='\n'){
+    } 
+    else if(c=='\n'){
       line_count++;
       i++;
       continue;
     }
-    if(is_digit(c)){
+    else if(is_digit(c)){
       //last char is \0 so it will not go out of bounds
       int start=i;
-      while(!is_digit(c2)){
+      while(is_digit(c2)){
         i++;
         c2=source_buffer[i+1];
       }
       
       if(is_seperator(c2)){  // if afther number is space or other seperator 
         lexed_buffer[lexed_count].type=NUMBER;
-        copy_to_lexed_buffer(start,i,lexed_count);
+        copy_to_lexed_buffer(start,i+1,lexed_count);
         lexed_buffer[lexed_count].line=line_count;
         lexed_count++;
+        i++;
         continue;
          
       } // if not it is invalid argument like 124eser cen not be part of (my) programing language .
       else{
-        printf(" combination of number and letters is not alowed like in line  "); 
+        printf(" combination of number and letters is not alowed like in this line  "); 
         printf("%d\n", line_count);
         return 1;
       }
     }
-    if(is_letter(c) || c=='$' || c=='#'){
+    else if(is_letter(c) || c=='$' || c=='#'){
       int start=i;
       while(!is_seperator(c2)){
         i++;
@@ -146,26 +150,37 @@ int lexer(int file_size){
       else{
         lexed_buffer[lexed_count].type=VARIABLE;
       }
-      copy_to_lexed_buffer(start,i,lexed_count);
+      copy_to_lexed_buffer(start,i+1,lexed_count);
       lexed_buffer[lexed_count].line=line_count;
       lexed_count++;
+      i++;
+      continue;
       
     }
-    if(c=='"'){
+    else if(c=='"'){
       int start=i;
       while(true){
         if(c2=='"') break;
         if(c2=='\0') {
           printf("ypu did not closed a  string wich you started in line");
           printf("%d\n", line_count);
+          return 1;
         }
         i++;
         c2=source_buffer[i+1];
       }
       lexed_buffer[lexed_count].type = STRING;
-      copy_to_lexed_buffer(start,i,lexed_count);
+      copy_to_lexed_buffer(start+1,i+1,lexed_count);
       lexed_buffer[lexed_count].line=line_count;
       lexed_count++;
+      i+=2;
+      continue;
+
+    }
+    else{
+      printf("unrecognise symbole  ");
+      printf("%c\n",c);
+      return 1;
     }
     
     
@@ -182,7 +197,7 @@ bool is_digit(char c){
 }
 
 bool is_seperator(char c){
-  return ((c==' ') || (c=='"')); // i will add more seperators letter if needed
+  return ((c==' ') || (c=='"')) || (c=='\n') || (c=='\0'); // i will add more seperators letter if needed
 
 }
 
@@ -194,4 +209,22 @@ void copy_to_lexed_buffer (int start , int end, int word_count){
     }
     word[size-1]='\0';
     strcpy(lexed_buffer[word_count].word, word);
+}
+
+
+void lexer_debug(){
+
+  printf("====================LEXER DEBUG====================\n");
+  for(int i=0;i<lexed_count;i++){
+    if (lexed_buffer[i].type==STRING) printf("STRING\t\t");
+    if (lexed_buffer[i].type==NUMBER) printf("NUMBER\t\t");
+    if (lexed_buffer[i].type==FUNCTION) printf("FUNCTION\t\t");
+    if (lexed_buffer[i].type==VARIABLE) printf("VARIABL\t\t");
+    if (lexed_buffer[i].type==VARIABLE_TYPE) printf("VARIABLE_TYPE\t\t");
+
+    printf(lexed_buffer[i].word);
+    printf("\t\t");
+    printf("%d\n", lexed_buffer[i].line);
+    printf("\n");
+  }
 }
