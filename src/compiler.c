@@ -31,7 +31,8 @@ TextBuffer *main_buffer;// = init_text_buffer();
 bool is_letter(char c);
 bool is_digit(char c);
 bool is_seperator(char c);
-int copy_to_lexed_buffer(int start, int end, int word_count); 
+int copy_to_lexed_buffer(int start, int end, int word_count);
+int parser();
 int lexer();
 void lexer_debug();
 
@@ -63,12 +64,9 @@ int main(int args,char *argv[]){
   input_file[dot_index+1]='s';
   input_file[dot_index+2]='\0';
   
-  if(file_to_buffer(src_file))return 1;
-  if(lexer())return 1;
-
   declaration_buffer=init_text_buffer();
   append_text_buffer(declaration_buffer,".data\n");
-  
+   
   main_buffer=init_text_buffer();
   append_text_buffer(main_buffer,".text\n");
   append_text_buffer(main_buffer,".globl main\n");
@@ -76,6 +74,13 @@ int main(int args,char *argv[]){
 
   append_text_buffer(main_buffer,"li $v0, 10\n");
   append_text_buffer(main_buffer,"syscall\n");
+  
+
+  if(file_to_buffer(src_file))return 1;
+  if(lexer())return 1;
+  if(parser());//return 1;
+
+
 
   FILE  *outputptr;
   outputptr = fopen(input_file,"w");
@@ -255,6 +260,61 @@ void lexer_debug(){
     printf("%d\n", lexed_buffer[i].line);
     printf("\n");
   }
+}
+
+bool is_variable_type_exsist(char* word){
+    if(strcmp(word,"$number"))
+      return true;
+    if(strcmp(word,"$string"))
+      return true;
+    else{
+      printf("ther is not such variabkle type \n");
+      return false;
+    }
+}
+typedef
+void declar_variable(char* word){
+  if(strcmp(word,"$NUMBER")==0 )
+     append_text_buffer(declaration_buffer,".asciiz"); //tenoererly
+  else if(strcmp(word,"$STRING")==0)
+     append_text_buffer(declaration_buffer,".asciiz");
+}
+
+int parser(){
+  int i = 0;
+  int current_line;
+  while(i<lexed_count){
+    current_line=lexed_buffer[i].lexed_count;
+    if(lexed_buffer[i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[i].word)){
+      i++;
+      if(i>lexed_count){
+        printf("forgot to write variable name \n could not parse");
+        return 1;
+      }
+      if(lexed_buffer[i].type==VARIABLE ){
+        append_text_buffer(declaration_buffer,lexed_buffer[i].word);
+        append_text_buffer(declaration_buffer,": ");
+        declar_variable(lexed_buffer[i-1].word);
+
+        i++;
+        if(i>lexed_count){
+          printf("forgot to write variable name \n could not parse");
+          return 1;
+        }
+          if(lesed_budder)
+
+
+        append_text_buffer(declaration_buffer,"\n");
+        
+      }
+
+    }
+    else{
+      printf("could not parse\n");
+      return 1;
+    }
+  }
+  return 0; 
 }
 
 
