@@ -14,23 +14,25 @@ typedef enum {
 
 typedef struct {
     TokenType type;
-    char word[64];
+    char *word;
     int line;
 } Token;
 
-char source_buffer[8192];
-Token lexed_buffer[2048];
+char *source_buffer;
+Token *lexed_buffer;
 int lexed_count=0;
 int file_to_buffer(char* filename);
+long file_size;
 
-
+char* output_string;
 
 bool is_letter(char c);
 bool is_digit(char c);
 bool is_seperator(char c);
-void copy_to_lexed_buffer(int start, int end, int word_count); 
+int copy_to_lexed_buffer(int start, int end, int word_count); 
 int lexer();
 void lexer_debug();
+
 
 int main(int args,char *argv[]){
   if(args<2){
@@ -58,6 +60,7 @@ int main(int args,char *argv[]){
   }
   input_file[dot_index+1]='s';
   input_file[dot_index+2]='\0';
+  
   if(file_to_buffer(src_file))return 1;
   if(lexer())return 1;
 
@@ -73,6 +76,13 @@ int main(int args,char *argv[]){
   fprintf(outputptr, "syscall\n");
   
   lexer_debug();
+
+    for(int i=0;i<lexed_count;i++)
+    free(lexed_buffer[i].word);
+    free(source_buffer);
+    free(lexed_buffer);
+
+
   return 0;
 }
 
@@ -83,18 +93,22 @@ int file_to_buffer(char* filename){
     return 1;
   }
   fseek(file, 0, SEEK_END);
-  long file_size = ftell(file);
+  file_size = ftell(file);
   rewind(file);
-  if(file_size>=8192){
-    printf("source file is too big . This compiler cen not handle 8192 characther + files. \n why?  : becouse it is compiler version 0.00001 ");
-    return 1;
-  }
-  fread(source_buffer, 1, file_size, file);
+
+  source_buffer=malloc(file_size);
+  fread(source_buffer,1,file_size,file);
+  source_buffer[file_size] = '\0';
   fclose(file);
+
+  
   return 0;
 }
 
 int lexer(){
+  // it should be enogef and i dont like idea of of constantly growing alocations . like c++ style vetor
+  lexed_buffer = malloc(file_size*sizeof(Token));
+
   int line_count=0;
   char c=0;
   char c2=source_buffer[0];
@@ -201,14 +215,19 @@ bool is_seperator(char c){
 
 }
 
-void copy_to_lexed_buffer (int start , int end, int word_count){
+int copy_to_lexed_buffer (int start , int end, int word_count){
     int size=end -start +1;
-    char word[size];
+    char *word= malloc(size);
+    if(word==NULL){
+      printf("no space to alloc word");
+      return 1;  
+    }
     for(int j=0,i=start;i<end;i++,j++){
       word[j]=source_buffer[i];
     }
     word[size-1]='\0';
-    strcpy(lexed_buffer[word_count].word, word);
+    lexed_buffer[word_count].word=word;
+    return 0;
 }
 
 
@@ -228,3 +247,6 @@ void lexer_debug(){
     printf("\n");
   }
 }
+
+
+
