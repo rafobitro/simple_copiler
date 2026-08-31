@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include "text_buffer.h"
 
 typedef enum {
   FUNCTION = 0,
@@ -24,7 +25,8 @@ int lexed_count=0;
 int file_to_buffer(char* filename);
 long file_size;
 
-char* output_string;
+TextBuffer *declaration_buffer;//= init_text_buffer();
+TextBuffer *main_buffer;// = init_text_buffer();
 
 bool is_letter(char c);
 bool is_digit(char c);
@@ -64,16 +66,22 @@ int main(int args,char *argv[]){
   if(file_to_buffer(src_file))return 1;
   if(lexer())return 1;
 
+  declaration_buffer=init_text_buffer();
+  append_text_buffer(declaration_buffer,".data\n");
+  
+  main_buffer=init_text_buffer();
+  append_text_buffer(main_buffer,".text\n");
+  append_text_buffer(main_buffer,".globl main\n");
+  append_text_buffer(main_buffer,"main:\n");
+
+  append_text_buffer(main_buffer,"li $v0, 10\n");
+  append_text_buffer(main_buffer,"syscall\n");
 
   FILE  *outputptr;
   outputptr = fopen(input_file,"w");
-  fprintf(outputptr, ".data\n");
-  fprintf(outputptr, ".text\n");
-  fprintf(outputptr, ".globl main\n");
-  fprintf(outputptr, "main:\n");
-  
-  fprintf(outputptr, "li $v0, 10\n");
-  fprintf(outputptr, "syscall\n");
+  text_buffer_to_file(declaration_buffer,outputptr);
+  text_buffer_to_file(main_buffer,outputptr);
+
   
   lexer_debug();
 
@@ -81,7 +89,8 @@ int main(int args,char *argv[]){
     free(lexed_buffer[i].word);
     free(source_buffer);
     free(lexed_buffer);
-
+    free_text_buffer(declaration_buffer);
+    free_text_buffer(main_buffer);
 
   return 0;
 }

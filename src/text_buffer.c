@@ -1,23 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-
-#define CHUNK_SIZE  4096
-
-
-typedef struct TextChunk{
-  char data[CHUNK_SIZE];
-  int used;
-  struct TextChunk *next;
-}TextChunk;
-
-
-typedef struct{
-  TextChunk *current;
-  TextChunk *head;
-}TextBuffer;
-
+#include "text_buffer.h"
 
 TextChunk* new_chunk(){
   TextChunk *chunk = malloc(sizeof(TextChunk));
@@ -37,11 +21,11 @@ void append_text_buffer(TextBuffer *buffer,char *text){
   int text_size=strlen(text);
   int free_chunk_space=CHUNK_SIZE-buffer->current->used;
   if( text_size<=free_chunk_space){
-    memcpy(buffer->current->data,text,text_size);
+    memcpy(buffer->current->data+buffer->current->used,text,text_size);
     buffer->current->used+=text_size;
   }
   else{
-    memcpy(buffer->current->data,text,free_chunk_space);
+    memcpy(buffer->current->data+buffer->current->used,text,free_chunk_space);
     buffer->current->used+=free_chunk_space;
     buffer->current->next=new_chunk();
     buffer->current=buffer->current->next;
