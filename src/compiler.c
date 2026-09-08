@@ -101,7 +101,7 @@ int main(int args,char *argv[]){
 }
 
 int file_to_buffer(char* filename){
-  FILE* file = fopen(filename, "r");
+  FILE* file = fopen(filename, "rb");
   if (file == NULL) {
     printf("faild to open source file");
     return 1;
@@ -110,9 +110,11 @@ int file_to_buffer(char* filename){
   file_size = ftell(file);
   rewind(file);
 
-  source_buffer=malloc(file_size);
+  source_buffer=malloc(file_size+1);
   fread(source_buffer,1,file_size,file);
   source_buffer[file_size] = '\0';
+  //source_buffer[file_size+1] = '\0';
+
   fclose(file);
 
   
@@ -121,13 +123,13 @@ int file_to_buffer(char* filename){
 
 int lexer(){
   // it should be enogef and i dont like idea of of constantly growing alocations . like c++ style vetor
-  lexed_buffer = malloc(file_size*sizeof(Token));
+  lexed_buffer = calloc(file_size,sizeof(Token));
 
   int line_count=0;
   char c=0;
   char c2=source_buffer[0];
   int i=0;
-  while(c2!='\0'){
+  while(i<file_size){
     c=source_buffer[i];
     c2=source_buffer[i+1];
     if(c==' '){
@@ -136,6 +138,10 @@ int lexer(){
     } 
     else if(c=='\n'){
       line_count++;
+      i++;
+      continue;
+    }
+    else if(c=='\r'){
       i++;
       continue;
     }
@@ -207,7 +213,11 @@ int lexer(){
     }
     else{
       printf("unrecognise symbole  ");
-      printf("%c\n",c);
+      printf("%c\n",source_buffer[i]);
+      printf("file size ");
+      printf("%ld\n", file_size);
+      printf("index ");
+      printf("%d ", i);
       return 1;
     }
     
@@ -225,7 +235,7 @@ bool is_digit(char c){
 }
 
 bool is_seperator(char c){
-  return ((c==' ') || (c=='"')) || (c=='\n') || (c=='\0'); // i will add more seperators letter if needed
+  return ((c==' ') || (c=='"') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0')) ; // i will add more seperators letter if needed
 
 }
 
@@ -255,7 +265,7 @@ void lexer_debug(){
     if (lexed_buffer[i].type==VARIABLE) printf("VARIABL\t\t");
     if (lexed_buffer[i].type==VARIABLE_TYPE) printf("VARIABLE_TYPE\t\t");
 
-    printf(lexed_buffer[i].word);
+    printf("%s",lexed_buffer[i].word);
     printf("\t\t");
     printf("%d\n", lexed_buffer[i].line);
     printf("\n");
@@ -263,16 +273,15 @@ void lexer_debug(){
 }
 
 bool is_variable_type_exsist(char* word){
-    if(strcmp(word,"$number"))
+    if(strcmp(word,"$number") ==0)
       return true;
-    if(strcmp(word,"$string"))
+    if(strcmp(word,"$string") ==0)
       return true;
     else{
       printf("ther is not such variabkle type \n");
       return false;
     }
 }
-typedef
 void declar_variable(char* word){
   if(strcmp(word,"$NUMBER")==0 )
      append_text_buffer(declaration_buffer,".asciiz"); //tenoererly
@@ -284,7 +293,7 @@ int parser(){
   int i = 0;
   int current_line;
   while(i<lexed_count){
-    current_line=lexed_buffer[i].lexed_count;
+    current_line=lexed_buffer[i].line;
     if(lexed_buffer[i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[i].word)){
       i++;
       if(i>lexed_count){
@@ -297,15 +306,7 @@ int parser(){
         declar_variable(lexed_buffer[i-1].word);
 
         i++;
-        if(i>lexed_count){
-          printf("forgot to write variable name \n could not parse");
-          return 1;
-        }
-          if(lesed_budder)
-
-
-        append_text_buffer(declaration_buffer,"\n");
-        
+     
       }
 
     }
