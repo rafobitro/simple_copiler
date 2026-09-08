@@ -10,6 +10,8 @@ typedef enum {
   VARIABLE,
   NUMBER,
   STRING,
+  ASIGNER,
+  ARRAY_NUMBER,//not yet in lexer
   ERROR,
 }TokenType;
 
@@ -24,7 +26,6 @@ Token *lexed_buffer;
 int lexed_count=0;
 int file_to_buffer(char* filename);
 long file_size;
-
 TextBuffer *declaration_buffer;//= init_text_buffer();
 TextBuffer *main_buffer;// = init_text_buffer();
 
@@ -38,17 +39,21 @@ void lexer_debug();
 
 
 int main(int args,char *argv[]){
+
   if(args<2){
     printf("no sourcefile");
     return 1;
   }
+
   char *src_file = argv[1];
   //char output_name;
   int dot_index=-1;
+
   for(int i=0;src_file[i] != '\0' ;i++){
     if(src_file[i] == '.')
       dot_index=i;
   }
+
   if(dot_index==-1 || 
     src_file[dot_index+1]!='y' ||
     src_file[dot_index+2]!='u' ||
@@ -71,32 +76,26 @@ int main(int args,char *argv[]){
   append_text_buffer(main_buffer,".text\n");
   append_text_buffer(main_buffer,".globl main\n");
   append_text_buffer(main_buffer,"main:\n");
-
   append_text_buffer(main_buffer,"li $v0, 10\n");
   append_text_buffer(main_buffer,"syscall\n");
   
-
   if(file_to_buffer(src_file))return 1;
   if(lexer())return 1;
   if(parser());//return 1;
-
-
-
+  
   FILE  *outputptr;
   outputptr = fopen(input_file,"w");
   text_buffer_to_file(declaration_buffer,outputptr);
   text_buffer_to_file(main_buffer,outputptr);
-
+  fclose(outputptr);
   
   lexer_debug();
-
     for(int i=0;i<lexed_count;i++)
     free(lexed_buffer[i].word);
     free(source_buffer);
     free(lexed_buffer);
     free_text_buffer(declaration_buffer);
     free_text_buffer(main_buffer);
-
   return 0;
 }
 
@@ -109,14 +108,11 @@ int file_to_buffer(char* filename){
   fseek(file, 0, SEEK_END);
   file_size = ftell(file);
   rewind(file);
-
   source_buffer=malloc(file_size+1);
   fread(source_buffer,1,file_size,file);
   source_buffer[file_size] = '\0';
   //source_buffer[file_size+1] = '\0';
-
   fclose(file);
-
   
   return 0;
 }
@@ -124,12 +120,13 @@ int file_to_buffer(char* filename){
 int lexer(){
   // it should be enogef and i dont like idea of of constantly growing alocations . like c++ style vetor
   lexed_buffer = calloc(file_size,sizeof(Token));
-
-  int line_count=0;
+  int line_count=1;
   char c=0;
   char c2=source_buffer[0];
   int i=0;
+
   while(i<file_size){
+
     c=source_buffer[i];
     c2=source_buffer[i+1];
     if(c==' '){
@@ -142,6 +139,14 @@ int lexer(){
       continue;
     }
     else if(c=='\r'){
+      i++;
+      continue;
+    }
+    else if(c=='='){ 
+      lexed_buffer[lexed_count].type=ASIGNER;
+      copy_to_lexed_buffer(i,i+1,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
       i++;
       continue;
     }
@@ -170,6 +175,7 @@ int lexer(){
     }
     else if(is_letter(c) || c=='$' || c=='#'){
       int start=i;
+
       while(!is_seperator(c2)){
         i++;
         c2=source_buffer[i+1];
@@ -191,25 +197,47 @@ int lexer(){
       continue;
       
     }
-    else if(c=='"'){
+    else if(c=='['){
       int start=i;
       while(true){
-        if(c2=='"') break;
+        if(c2==']') break;
         if(c2=='\0') {
-          printf("ypu did not closed a  string wich you started in line");
+          printf("ypu did not closed a [ ] wich you started in line");
           printf("%d\n", line_count);
           return 1;
         }
+        if(c2=='\n') line_count++;
+
         i++;
         c2=source_buffer[i+1];
       }
-      lexed_buffer[lexed_count].type = STRING;
+      lexed_buffer[lexed_count].type = ARRAY_NUMBER;
       copy_to_lexed_buffer(start+1,i+1,lexed_count);
       lexed_buffer[lexed_count].line=line_count;
       lexed_count++;
       i+=2;
       continue;
+    }
+    else if(c=='"'){
+      int start=i;
+      while(true){
+        if(c2=='"') break;
+        if(c2=='\0') {
+          printf("ypu did not closed a string wich you started in line");
+          printf("%d\n", line_count);
+          return 1;
+        }
+        if(c2=='\n') line_count++;
 
+        i++;
+        c2=source_buffer[i+1];
+      }
+      lexed_buffer[lexed_count].type = STRING;
+      copy_to_lexed_buffer(start,i+2,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i+=2;
+      continue;
     }
     else{
       printf("unrecognise symbole  ");
@@ -235,8 +263,7 @@ bool is_digit(char c){
 }
 
 bool is_seperator(char c){
-  return ((c==' ') || (c=='"') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0')) ; // i will add more seperators letter if needed
-
+  return ((c==' ') || (c=='"') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0') || (c=='=')) ;
 }
 
 int copy_to_lexed_buffer (int start , int end, int word_count){
@@ -254,9 +281,7 @@ int copy_to_lexed_buffer (int start , int end, int word_count){
     return 0;
 }
 
-
 void lexer_debug(){
-
   printf("====================LEXER DEBUG====================\n");
   for(int i=0;i<lexed_count;i++){
     if (lexed_buffer[i].type==STRING) printf("STRING\t\t");
@@ -264,7 +289,8 @@ void lexer_debug(){
     if (lexed_buffer[i].type==FUNCTION) printf("FUNCTION\t\t");
     if (lexed_buffer[i].type==VARIABLE) printf("VARIABL\t\t");
     if (lexed_buffer[i].type==VARIABLE_TYPE) printf("VARIABLE_TYPE\t\t");
-
+    if (lexed_buffer[i].type==ARRAY_NUMBER) printf("ARRAY_NUMBER\t\t");
+    if (lexed_buffer[i].type==ASIGNER) printf("ASIGNER\t\t");
     printf("%s",lexed_buffer[i].word);
     printf("\t\t");
     printf("%d\n", lexed_buffer[i].line);
@@ -282,11 +308,47 @@ bool is_variable_type_exsist(char* word){
       return false;
     }
 }
-void declar_variable(char* word){
-  if(strcmp(word,"$NUMBER")==0 )
-     append_text_buffer(declaration_buffer,".asciiz"); //tenoererly
-  else if(strcmp(word,"$STRING")==0)
+//most likly dont need anymore becouse desison is every variable type will be register size 32 bit meaning word
+void declare_variable_type(char* word){
+  if(strcmp(word,"$number")==0 )
      append_text_buffer(declaration_buffer,".asciiz");
+  else if(strcmp(word,"$string")==0)
+     append_text_buffer(declaration_buffer,".asciiz");
+}
+
+void declar_variable(char* name){
+  append_text_buffer(declaration_buffer,name);
+  append_text_buffer(declaration_buffer,": : .word");
+  append_text_buffer(declaration_buffer,"\n");
+}
+
+void declar_array(char* name, char* size){
+  append_text_buffer(declaration_buffer,name);
+  append_text_buffer(declaration_buffer,": .word ");
+  append_text_buffer(declaration_buffer,size);
+  append_text_buffer(declaration_buffer,"\n");
+}
+
+bool type_chack(char* type, TokenType t_type){
+  if(t_type == NUMBER && strcmp(type,"$number")==0)
+    return true;
+  if(t_type == STRING && strcmp(type,"$string")==0)
+    return true;
+  return false;
+}
+
+void asign_variable(char* name, char* value ){
+  //move value to register
+  append_text_buffer(main_buffer,"la $t1, ");
+  append_text_buffer(main_buffer,value);
+  append_text_buffer(main_buffer,"\n");
+
+  // move adres to register
+  append_text_buffer(main_buffer,"la $t0, ");
+  append_text_buffer(main_buffer,name);
+  append_text_buffer(main_buffer,"\n");
+  //overwrite value in buffer
+  append_text_buffer(main_buffer,"sw $t1, 0($t0)\n");
 }
 
 int parser(){
@@ -295,28 +357,52 @@ int parser(){
   while(i<lexed_count){
     current_line=lexed_buffer[i].line;
     if(lexed_buffer[i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[i].word)){
+      char* type=lexed_buffer[i].word;
       i++;
-      if(i>lexed_count){
+      if(i>=lexed_count){
         printf("forgot to write variable name \n could not parse");
         return 1;
       }
-      if(lexed_buffer[i].type==VARIABLE ){
-        append_text_buffer(declaration_buffer,lexed_buffer[i].word);
-        append_text_buffer(declaration_buffer,": ");
-        declar_variable(lexed_buffer[i-1].word);
+      if(lexed_buffer[i].type!=VARIABLE ){
+         printf("none valid structure afther variable type you sould write variable name \n could not parse");
+        return 1;
+      }
+      char* name=lexed_buffer[i].word;
+      i++;
+      if(i>=lexed_count || lexed_buffer[i].type != ASIGNER && lexed_buffer[i].type != ARRAY_NUMBER){
+        declar_variable( name);
+      }
+      else if( lexed_buffer[i].type == ASIGNER ){
+        declar_variable( name);
+        i++;
+        if(i>=lexed_count){
+          printf("forgot to asign value \n could not parse");
+          return 1;
+        }
+        if(type_chack(type,lexed_buffer[i].type)){
+          asign_variable(name,lexed_buffer[i].word);
+          i++;
+        }
+        else{
+          printf("you should asign  ");
+          printf("%s",type);
+          printf("to ");
+          printf("%s",name);
+          printf("\n");
+          return 1;
+        }
+      }
+      else{
+        declar_array( name , lexed_buffer[i].word);
 
         i++;
-     
       }
-
     }
     else{
       printf("could not parse\n");
+      printf("%d",i);
       return 1;
     }
   }
   return 0; 
 }
-
-
-
