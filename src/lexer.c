@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdbool.h>
-#include "text_buffer.h"
 #include "lexer.h"
 
 

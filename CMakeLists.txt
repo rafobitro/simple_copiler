@@ -9,5 +9,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(compiler
     src/compiler.c
     src/lexer.c
+    src/parser.c
+    src/codegen.c
     src/text_buffer.c
 )
