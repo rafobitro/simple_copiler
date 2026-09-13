@@ -1,16 +1,6 @@
 #include <stdio.h>
-#include <string.h>
 #include "text_buffer.h"
 #include "codegen.h"
-
-
-//most likly dont need anymore becouse desison is every variable type will be register size 32 bit meaning word
-void declare_variable_type(char* word){
-  if(strcmp(word,"$number")==0 )
-     append_text_buffer(declaration_buffer,".asciiz");
-  else if(strcmp(word,"$string")==0)
-     append_text_buffer(declaration_buffer,".asciiz");
-}
 
 void declar_variable(char* name){
   append_text_buffer(declaration_buffer,name);

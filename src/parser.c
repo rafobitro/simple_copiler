@@ -27,7 +27,7 @@ bool is_variable_type_exsist(char* word){
 
 int parser(){
   int i = 0;
-  int current_line;
+  int current_line;//dont use yet
   while(i<lexed_count){
     current_line=lexed_buffer[i].line;
     if(lexed_buffer[i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[i].word)){
