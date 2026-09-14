@@ -64,7 +64,7 @@ int main(int args,char *argv[]){
   text_buffer_to_file(main_buffer,outputptr);
   fclose(outputptr);
   
-  lexer_debug();
+//  lexer_debug();
     for(int i=0;i<lexed_count;i++)
     free(lexed_buffer[i].word);
     free(source_buffer);

@@ -1,9 +1,0 @@
-          
-#int radndom_number 1212
-
-#string text  "some text random"
-
-$printf text
-
-
-

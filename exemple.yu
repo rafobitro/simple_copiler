@@ -1,0 +1,49 @@
+$number radndom_number = 23
+$number random_array[232]
+
+"
+# it is curent version how i cen do a hello world in my langauge but it is just inline asembly i will fix it 
+# so sementenusly this si way how to write a comment i mey fix this idk 
+li $v0, 11
+li $a0, 'H'
+syscall
+li $v0, 11
+li $a0, 'e'
+syscall
+li $v0, 11
+li $a0, 'l'
+syscall
+li $v0, 11
+li $a0, 'l'
+syscall
+li $v0, 11
+li $a0, 'o'
+syscall
+li $v0, 11
+li $a0, ' '
+syscall
+li $v0, 11
+li $a0, 'W'
+syscall
+li $v0, 11
+li $a0, 'o'
+syscall
+li $v0, 11
+li $a0, 'r'
+syscall
+li $v0, 11
+li $a0, 'l'
+syscall
+li $v0, 11
+li $a0, 'd'
+syscall
+li $v0, 11
+li $a0, '!'
+syscall
+
+"
+
+
+
+
+
