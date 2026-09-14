@@ -4,7 +4,7 @@
 
 void declar_variable(char* name){
   append_text_buffer(declaration_buffer,name);
-  append_text_buffer(declaration_buffer,": : .word");
+  append_text_buffer(declaration_buffer,": .word");
   append_text_buffer(declaration_buffer,"\n");
 }
 

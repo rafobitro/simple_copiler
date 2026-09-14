@@ -3,13 +3,12 @@
 #include "lexer.h"
 #include "parser.h"
 #include "codegen.h"
+#include "text_buffer.h"
 
 
 
 bool type_chack(char* type, TokenType t_type){
   if(t_type == NUMBER && strcmp(type,"$number")==0)
-    return true;
-  if(t_type == STRING && strcmp(type,"$string")==0)
     return true;
   return false;
 }
@@ -25,56 +24,63 @@ bool is_variable_type_exsist(char* word){
     }
 }
 
-int parser(){
-  int i = 0;
-  int current_line;//dont use yet
-  while(i<lexed_count){
-    current_line=lexed_buffer[i].line;
-    if(lexed_buffer[i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[i].word)){
-      char* type=lexed_buffer[i].word;
-      i++;
-      if(i>=lexed_count){
-        printf("forgot to write variable name \n could not parse");
+void parser_error(char* message, Token token) {
+    printf("\033[1;31m[PARSER ERROR]: %s\033[0m\n", message);
+    printf("\033[31m  -> Line   : %d\n", token.line);
+    printf("  -> Token  : '%s'\n\033[0m", token.word);
+}
+
+int parse_declaration(int *i){
+    char* type=lexed_buffer[*i].word;
+    (*i)++;
+    if(*i>=lexed_count){
+      parser_error("forgot to write variable name, could not parse", lexed_buffer[*i-1]);
+      return 1;
+    }
+    if(lexed_buffer[*i].type!=VARIABLE ){
+       parser_error("invalid structure after variable type, you should write a variable name", lexed_buffer[*i]);
+      return 1;
+    }
+    char* name=lexed_buffer[*i].word;
+    (*i)++;
+    if(*i>=lexed_count || lexed_buffer[*i].type != ASIGNER && lexed_buffer[*i].type != ARRAY_NUMBER){
+      declar_variable( name);
+    }
+    else if( lexed_buffer[*i].type == ASIGNER ){
+      declar_variable( name);
+      (*i)++;
+      if(*i>=lexed_count){
+        parser_error("forgot to assign value", lexed_buffer[*i - 1]);
         return 1;
       }
-      if(lexed_buffer[i].type!=VARIABLE ){
-         printf("none valid structure afther variable type you sould write variable name \n could not parse");
-        return 1;
-      }
-      char* name=lexed_buffer[i].word;
-      i++;
-      if(i>=lexed_count || lexed_buffer[i].type != ASIGNER && lexed_buffer[i].type != ARRAY_NUMBER){
-        declar_variable( name);
-      }
-      else if( lexed_buffer[i].type == ASIGNER ){
-        declar_variable( name);
-        i++;
-        if(i>=lexed_count){
-          printf("forgot to asign value \n could not parse");
-          return 1;
-        }
-        if(type_chack(type,lexed_buffer[i].type)){
-          asign_variable(name,lexed_buffer[i].word);
-          i++;
-        }
-        else{
-          printf("you should asign  ");
-          printf("%s",type);
-          printf("to ");
-          printf("%s",name);
-          printf("\n");
-          return 1;
-        }
+      if(type_chack(type,lexed_buffer[*i].type)){
+        asign_variable(name,lexed_buffer[*i].word);
+        (*i)++;
       }
       else{
-        declar_array( name , lexed_buffer[i].word);
-
-        i++;
+        parser_error("type mismatch ", lexed_buffer[*i]);
+        return 1;
       }
     }
     else{
-      printf("could not parse\n");
-      printf("%d",i);
+      declar_array( name , lexed_buffer[*i].word);
+      (*i)++;
+    }
+  return 0;
+
+}
+
+int parser(){
+  int i = 0;
+  while(i<lexed_count){
+    if(lexed_buffer[i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[i].word)){
+      if (parse_declaration(&i))  return 1;
+    }
+    else if(lexed_buffer[i].type == ASEMBLY ){
+        append_text_buffer(main_buffer,lexed_buffer[i++].word);
+    }
+    else{
+      parser_error("could not parse",lexed_buffer[i]);
       return 1;
     }
   }

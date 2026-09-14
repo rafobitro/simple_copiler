@@ -71,7 +71,7 @@ int lexer(){
       int start=i;
 
       while(!is_seperator(c2)){
-i++;
+        i++;
         c2=source_buffer[i+1];
       }
       
@@ -117,7 +117,7 @@ i++;
       while(true){
         if(c2=='"') break;
         if(c2=='\0') {
-          printf("ypu did not closed a string wich you started in line");
+          printf("ypu did not closed a " " wich you started in line");
           printf("%d\n", line_count);
           return 1;
         }
@@ -126,8 +126,8 @@ i++;
         i++;
         c2=source_buffer[i+1];
       }
-      lexed_buffer[lexed_count].type = STRING;
-      copy_to_lexed_buffer(start,i+2,lexed_count);
+      lexed_buffer[lexed_count].type = ASEMBLY;
+      copy_to_lexed_buffer(start+1,i+1,lexed_count);
       lexed_buffer[lexed_count].line=line_count;
       lexed_count++;
       i+=2;
@@ -152,7 +152,7 @@ i++;
 void lexer_debug(){
   printf("====================LEXER DEBUG====================\n");
   for(int i=0;i<lexed_count;i++){
-    if (lexed_buffer[i].type==STRING) printf("STRING\t\t");
+    if (lexed_buffer[i].type==ASEMBLY) printf("STRING\t\t");
     if (lexed_buffer[i].type==NUMBER) printf("NUMBER\t\t");
     if (lexed_buffer[i].type==FUNCTION) printf("FUNCTION\t\t");
     if (lexed_buffer[i].type==VARIABLE) printf("VARIABL\t\t");

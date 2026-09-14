@@ -6,9 +6,14 @@ typedef enum {
   VARIABLE_TYPE,
   VARIABLE,
   NUMBER,
-  STRING,
   ASIGNER,
-  ARRAY_NUMBER,//not yet in lexer
+  ARRAY_NUMBER,
+  FUN_DEF,
+  ASEMBLY,
+  IF,
+  FOR,
+  START,
+  END,
   ERROR,
 }TokenType;
 
