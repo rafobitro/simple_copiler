@@ -136,8 +136,8 @@ int lexer(){
     else{
       printf("unrecognise symbole  ");
       printf("%c\n",source_buffer[i]);
-      printf("file size ");
-      printf("%ld\n", file_size);
+      printf("line  ");
+      printf("%ld\n", line_count);
       printf("index ");
       printf("%d ", i);
       return 1;

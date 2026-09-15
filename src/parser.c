@@ -70,6 +70,53 @@ int parse_declaration(int *i){
 
 }
 
+int parse_asigner(int *i){
+  char* name = lexed_buffer[*i].word;
+  //if(!is_variable_declared) return 1;
+  (*i)++;
+  if(*i>=lexed_count){
+    parser_error("forgot to finish expresion, could not parse", lexed_buffer[*i-1]);
+    return 1;
+  }
+  if(lexed_buffer[*i].type==ASIGNER){
+    (*i)++;
+    if(lexed_buffer[*i].type==NUMBER){
+      asign_variable(name,lexed_buffer[*i].word);
+      (*i)++;
+
+    }
+    else{
+      parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
+      return 1;
+
+    }
+  }
+  else if(lexed_buffer[*i].type=ARRAY_NUMBER){
+    char* array_number=lexed_buffer[*i].word;
+    (*i)++;
+    if(lexed_buffer[*i].type==ASIGNER){
+      (*i)++;
+      if(lexed_buffer[*i].type==NUMBER){
+        asign_variable_array(name,lexed_buffer[*i].word,array_number);
+        (*i)++;
+
+      }
+      else{
+        parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
+        return 1;
+
+      }
+    }
+  }
+  else{
+    parser_error("if expresion starts with variable it should or be array number or asigner", lexed_buffer[*i-1]);
+    return 1;
+
+  }
+  return 0;
+
+}
+
 int parser(){
   int i = 0;
   while(i<lexed_count){
@@ -77,7 +124,10 @@ int parser(){
       if (parse_declaration(&i))  return 1;
     }
     else if(lexed_buffer[i].type == ASEMBLY ){
-        append_text_buffer(main_buffer,lexed_buffer[i++].word);
+      append_text_buffer(main_buffer,lexed_buffer[i++].word);
+    }
+    else if(lexed_buffer[i].type == VARIABLE){
+      if(parse_asigner(&i)) return 1;
     }
     else{
       parser_error("could not parse",lexed_buffer[i]);
