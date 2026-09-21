@@ -14,4 +14,5 @@ void codegen_function_start(char* name);
 void codegen_function_end(char* name);
 void codegen_function_param_store(char* name, int index);
 void codegen_load_arg(char* value, TokenType type, int index);
+void codegen_load_arg_address(char* name, int index);
 void codegen_function_call(char* name);

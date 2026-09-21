@@ -8,7 +8,7 @@
 #define MAX_PARAMS 4
 
 bool is_variable_type_exsist(char* word){
-    if(strcmp(word,"$number") ==0)
+    if(strcmp(word,"number") ==0)
       return true;
     if(strcmp(word,"$string") ==0)
       return true;
@@ -66,7 +66,7 @@ int parse_asigner(int *i){
   }
   if(lexed_buffer[*i].type==ASIGNER){
     (*i)++;
-    if(lexed_buffer[*i].type==NUMBER){
+    if(lexed_buffer[*i].type==NUMBER || lexed_buffer[*i].type==CHAR){
       asign_variable(name,lexed_buffer[*i].word);
       (*i)++;
 
@@ -82,7 +82,7 @@ int parse_asigner(int *i){
     (*i)++;
     if(lexed_buffer[*i].type==ASIGNER){
       (*i)++;
-      if(lexed_buffer[*i].type==NUMBER){
+      if(lexed_buffer[*i].type==NUMBER || lexed_buffer[*i].type==CHAR ){
         asign_variable_array(name,lexed_buffer[*i].word,array_number);
         (*i)++;
 
@@ -126,6 +126,8 @@ int parse_fundef(int *i){
       parser_error("too many parameters, max 4 allowed", lexed_buffer[*i]);
       return 1;
     }
+
+
     param_names[param_count++] = lexed_buffer[*i].word;
     (*i)++;
 
@@ -169,7 +171,7 @@ int parse_fundef(int *i){
 int parse_funcall(int *i){
   // i am not chacking if  function exsist or not i am not chacking ig i use rigth amout of parameters or not yet .
   // meybe i will do second run parser cheacker to do it . 
-  char *name = lexed_buffer[*i].word + 1;
+  char *name = lexed_buffer[*i].word;
   (*i)++;
 
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
@@ -188,9 +190,20 @@ int parse_funcall(int *i){
       parser_error("too many arguments, max 4 allowed", lexed_buffer[*i]);
       return 1;
     }
-    codegen_load_arg(lexed_buffer[*i].word, lexed_buffer[*i].type, arg_count);
-    arg_count++;
+
+        char *arg_word = lexed_buffer[*i].word;
+    TokenType arg_type = lexed_buffer[*i].type;
     (*i)++;
+
+        if(*i<lexed_count && lexed_buffer[*i].type == ARRAY_NUMBER && lexed_buffer[*i].word[0] == '\0'){
+      codegen_load_arg_address(arg_word, arg_count);
+      (*i)++; 
+    }
+    else{
+      codegen_load_arg(arg_word, arg_type, arg_count);
+    }
+
+    arg_count++;
 
     if(*i<lexed_count && lexed_buffer[*i].type == COMMA){
       (*i)++;
@@ -209,7 +222,6 @@ int parse_funcall(int *i){
   codegen_function_call(name);
   return 0;
 }
-
 int parse_statements(int *i, bool function){
   while((*i)<lexed_count){
     if(lexed_buffer[*i].type == END){

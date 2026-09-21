@@ -75,7 +75,7 @@ int lexer(){
         return 1;
       }
       lexed_buffer[lexed_count].type = CHAR;
-      copy_to_lexed_buffer(i+1, i+2, lexed_count);
+      copy_to_lexed_buffer(i, i+3, lexed_count);
       lexed_buffer[lexed_count].line = line_count;
       lexed_count++;
       i += 3;
@@ -91,12 +91,17 @@ int lexer(){
       
       if(c=='$'){
         lexed_buffer[lexed_count].type=VARIABLE_TYPE;
+        start++;
+
       }
       else if(c=='#'){
         lexed_buffer[lexed_count].type=FUNCTION;
+        start++;
       }
       else if(c=='@'){
         lexed_buffer[lexed_count].type=FUN_DEF;
+        start++;
+
       }
       else{
         lexed_buffer[lexed_count].type=VARIABLE;

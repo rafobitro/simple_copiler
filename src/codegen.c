@@ -101,6 +101,15 @@ void codegen_load_arg(char* value, TokenType type, int index){
   }
 }
 
+void codegen_load_arg_address(char* name, int index){
+  static char *arg_regs[4] = {"$a0","$a1","$a2","$a3"};
+  append_text_buffer(main_buffer, "la ");
+  append_text_buffer(main_buffer, arg_regs[index]);
+  append_text_buffer(main_buffer, ", ");
+  append_text_buffer(main_buffer, name);
+  append_text_buffer(main_buffer, "\n");
+}
+
 void codegen_function_call(char* name){
   append_text_buffer(main_buffer, "jal ");
   append_text_buffer(main_buffer, name);
