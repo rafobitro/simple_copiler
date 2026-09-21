@@ -9,4 +9,7 @@ bool is_variable_declared(char* word);
 void parser_error(char*message, Token token); 
 int parse_declaration(int *i);
 int parse_asigner(int *i);
+int parse_statements(int *i, bool function);
+int parse_fundef(int *i);
+int parse_funcall(int *i);
 int parser(void);

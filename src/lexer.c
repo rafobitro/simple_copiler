@@ -67,7 +67,21 @@ int lexer(){
         return 1;
       }
     }
-    else if(is_letter(c) || c=='$' || c=='#'){
+    else if(c == '\''){
+      if(c2=='\0' || source_buffer[i+2] != '\'')
+      {
+        printf("you did not close a ' you started in line ");
+        printf("%d\n", line_count);
+        return 1;
+      }
+      lexed_buffer[lexed_count].type = CHAR;
+      copy_to_lexed_buffer(i+1, i+2, lexed_count);
+      lexed_buffer[lexed_count].line = line_count;
+      lexed_count++;
+      i += 3;
+      continue;
+    }
+    else if(is_letter(c) || c=='$' || c=='#' || c=='@'){
       int start=i;
 
       while(!is_seperator(c2)){
@@ -80,6 +94,9 @@ int lexer(){
       }
       else if(c=='#'){
         lexed_buffer[lexed_count].type=FUNCTION;
+      }
+      else if(c=='@'){
+        lexed_buffer[lexed_count].type=FUN_DEF;
       }
       else{
         lexed_buffer[lexed_count].type=VARIABLE;
@@ -133,6 +150,47 @@ int lexer(){
       i+=2;
       continue;
     }
+    else if(c=='('){
+        lexed_buffer[lexed_count].type=LPAREN;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+        continue;
+    }
+    else if(c==')'){
+        lexed_buffer[lexed_count].type=RPAREN;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+        continue;
+    }
+    else if(c==','){
+        lexed_buffer[lexed_count].type=COMMA;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+        continue;
+    }
+    else if(c=='{'){
+        lexed_buffer[lexed_count].type=START;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+        continue;
+    }
+    else if(c=='}'){
+        lexed_buffer[lexed_count].type=END;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+        continue;
+    }
+    
     else{
       printf("unrecognise symbole  ");
       printf("%c\n",source_buffer[i]);
@@ -178,7 +236,8 @@ bool is_digit(char c){
 }
 
 bool is_seperator(char c){
-  return ((c==' ') || (c=='"') || (c=='\'') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0') || (c=='=') ||(c=='[') || (c==']')) ;
+  return ((c==' ') || (c=='"') || (c=='\'') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0')
+       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') || (c=='}'));
 }
 
 

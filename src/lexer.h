@@ -10,10 +10,14 @@ typedef enum {
   ARRAY_NUMBER,
   FUN_DEF,
   ASEMBLY,
-  IF,
-  FOR,
+  IF,// not yet
+  FOR,// not yet
   START,
   END,
+  CHAR,
+  LPAREN,
+  RPAREN,
+  COMMA,
   ERROR,
 }TokenType;
 
