@@ -181,3 +181,48 @@ I will add testing at the point where I am reasonably sure about the grammar of 
 
 It will be really useful to just run the code and not have to check the output manually.
 
+
+Also, functions can only take a maximum of 4 inputs because why would you need more? I don't need more for Snake, and it is easier to fit them inside registers. And I could do even more super easily because, unlike x86, MIPS has a lot of free registers, but keeping it at 4 is simple enough.
+
+### Hello World Example
+
+Here is a simple Hello World example in the current version of `.yu`. Look at the `print` function. In the final version, I will add it to the standard library and add an `include` option. Also, right now it is fully written in inline assembly because `if` statements and loops are not done yet.
+
+Also, look at the current design of the function call I told you about. I am declaring the function input by name and passing the value by pointer, which is kind of meh. This is more of a design problem than a technical problem.
+
+```text
+$number greeting[13]
+greeting[0] = 'H'
+greeting[1] = 'e'
+greeting[2] = 'l'
+greeting[3] = 'l'
+greeting[4] = 'o'
+greeting[5] = ' '
+greeting[6] = 'W'
+greeting[7] = 'o'
+greeting[8] = 'r'
+greeting[9] = 'l'
+greeting[10] = 'd'
+greeting[11] = '!'
+greeting[12] = 0
+
+@print (str) {
+   
+  "
+    lw $t0, str
+  print_loop:
+    lw $t1, 0($t0)
+    beqz $t1, end_print
+    move $a0, $t1
+    li $v0, 11
+    syscall
+    addi $t0, $t0, 4
+    j print_loop
+  end_print:
+  "
+
+}
+
+#print(greeting[])
+```
+
