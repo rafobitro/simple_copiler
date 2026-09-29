@@ -156,44 +156,60 @@ int lexer(){
       continue;
     }
     else if(c=='('){
-        lexed_buffer[lexed_count].type=LPAREN;
-        copy_to_lexed_buffer(i,i+1,lexed_count);
-        lexed_buffer[lexed_count].line=line_count;
-        lexed_count++;
-        i++;
-        continue;
+      lexed_buffer[lexed_count].type=LPAREN;
+      copy_to_lexed_buffer(i,i+1,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i++;
+      continue;
     }
     else if(c==')'){
-        lexed_buffer[lexed_count].type=RPAREN;
-        copy_to_lexed_buffer(i,i+1,lexed_count);
-        lexed_buffer[lexed_count].line=line_count;
-        lexed_count++;
-        i++;
-        continue;
+      lexed_buffer[lexed_count].type=RPAREN;
+      copy_to_lexed_buffer(i,i+1,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i++;
+      continue;
     }
     else if(c==','){
-        lexed_buffer[lexed_count].type=COMMA;
-        copy_to_lexed_buffer(i,i+1,lexed_count);
-        lexed_buffer[lexed_count].line=line_count;
-        lexed_count++;
-        i++;
-        continue;
+      lexed_buffer[lexed_count].type=COMMA;
+      copy_to_lexed_buffer(i,i+1,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i++;
+      continue;
     }
     else if(c=='{'){
-        lexed_buffer[lexed_count].type=START;
-        copy_to_lexed_buffer(i,i+1,lexed_count);
-        lexed_buffer[lexed_count].line=line_count;
-        lexed_count++;
-        i++;
-        continue;
+      lexed_buffer[lexed_count].type=START;
+      copy_to_lexed_buffer(i,i+1,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i++;
+      continue;
     }
     else if(c=='}'){
-        lexed_buffer[lexed_count].type=END;
-        copy_to_lexed_buffer(i,i+1,lexed_count);
-        lexed_buffer[lexed_count].line=line_count;
-        lexed_count++;
+      lexed_buffer[lexed_count].type=END;
+      copy_to_lexed_buffer(i,i+1,lexed_count);
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i++;
+      continue;
+    }
+    else if(c=='?' ){
+      c2=source_buffer[i+1];
+      if(c2=='?'){
+        lexed_buffer[lexed_count].type=LOOP;
+        copy_to_lexed_buffer(i,i+2,lexed_count);
         i++;
-        continue;
+      }
+      else{
+        lexed_buffer[lexed_count].type=IF;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+      }
+      lexed_buffer[lexed_count].line=line_count;
+      lexed_count++;
+      i++;
+      continue;
     }
     
     else{
@@ -242,7 +258,7 @@ bool is_digit(char c){
 
 bool is_seperator(char c){
   return ((c==' ') || (c=='"') || (c=='\'') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0')
-       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') || (c=='}'));
+       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') || (c=='}') || (c=='?'));
 }
 
 

@@ -10,8 +10,8 @@ typedef enum {
   ARRAY_NUMBER,
   FUN_DEF,
   ASEMBLY,
-  IF,// not yet
-  FOR,// not yet
+  IF,  // is ? 
+  LOOP,// is duble ?? 
   START,
   END,
   CHAR,
