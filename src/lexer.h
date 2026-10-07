@@ -2,23 +2,23 @@
 #include <stdbool.h>
 
 typedef enum {
-  FUNCTION = 0,
-  VARIABLE_TYPE,
-  VARIABLE,
-  NUMBER,
-  ASIGNER,
-  ARRAY_NUMBER,
-  FUN_DEF,
-  ASEMBLY,
+  FUNCTION = 0, // #FUNCTION_NAME is a way to call function 
+  VARIABLE_TYPE, // idk if i need this rigth now i dont even chack this 
+  VARIABLE, // any text without seperator
+  NUMBER, // just number 
+  ASIGNER, // = 
+  ARRAY_NUMBER, // anything inside []
+  FUN_DEF, // @FUNCTION_NAME is way to define function 
+  ASEMBLY, // anything inside "" is asembly code lexing without chacking 
   IF,  // is ? 
   LOOP,// is duble ?? 
-  START,
-  END,
-  CHAR,
-  LPAREN,
-  RPAREN,
-  COMMA,
-  ERROR,
+  START, // { 
+  END, // } 
+  CHAR, // 'ANY SINGLE CHARACTER '
+  LPAREN, // ( 
+  RPAREN, // )
+  COMMA, // ,
+  ERROR, // i dont use this
 }TokenType;
 
 typedef struct {

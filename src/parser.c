@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "lexer.h"
 #include "parser.h"
@@ -171,7 +172,7 @@ int parse_fundef(int *i){
 int parse_funcall(int *i){
   // i am not chacking if  function exsist or not i am not chacking ig i use rigth amout of parameters or not yet .
   // meybe i will do second run parser cheacker to do it . 
-  char *name = lexed_buffer[*i].word;
+  char *name = lexed_buffer[*i].word;//REMEMBER TO ADD LINE NUMBER
   (*i)++;
 
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
@@ -222,6 +223,61 @@ int parse_funcall(int *i){
   codegen_function_call(name);
   return 0;
 }
+
+static char* int_to_string(int num) {
+    static char str[12];
+    snprintf(str, sizeof(str), "%d", num);
+    return str;
+}
+
+int parse_branch(int *i){
+  
+  int line = lexed_buffer[*i].line;
+  char* name="IF";
+  (*i)++;
+  
+  if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
+    parser_error("expected '(' after function call", lexed_buffer[*i-1]);
+    return 1;
+  }
+  (*i)++;
+  
+  //move 2 values to registers 1 and 2 for compereson 
+   for(int j=0; j<2; j++){
+ 
+    if(*i>=lexed_count ||  lexed_buffer[*i].type != NUMBER &&  lexed_buffer[*i].type != CHAR &&  lexed_buffer[*i].type != VARIABLE){
+      parser_error("Branches should have 2 values included A and B ", lexed_buffer[*i]);
+      return 1;
+    }
+    codegen_load_brunch_value(lexed_buffer[*i], (j==0 ? "$t1" : "$t2") );
+    (*i)++;
+ 
+    
+    if(j==0 && *i<lexed_count && lexed_buffer[*i].type == COMMA){
+      (*i)++;
+    }
+  }
+
+  if(*i>=lexed_count || lexed_buffer[*i].type != START){
+    parser_error("expected '{' to start branch body", lexed_buffer[*i-1]);
+    return 1;
+  }
+  (*i)++;
+
+  append_text_buffer(main_buffer, "bne $t1, $t2, ");
+  append_text_buffer(main_buffer, name);
+  append_text_buffer(main_buffer, int_to_string(line));
+  append_text_buffer(main_buffer, "\n");
+
+  if(parse_statements(i, true)) return 1;
+
+  append_text_buffer(main_buffer, name);
+  append_text_buffer(main_buffer, int_to_string(line));
+  append_text_buffer(main_buffer, ":\n");
+  return 0; 
+}
+
+
 int parse_statements(int *i, bool function){
   while((*i)<lexed_count){
     if(lexed_buffer[*i].type == END){
@@ -247,6 +303,9 @@ int parse_statements(int *i, bool function){
     }
     else if(lexed_buffer[*i].type == FUNCTION){
       if(parse_funcall(i)) return 1;
+    }
+    else if(lexed_buffer[*i].type == IF){
+      if(parse_branch)return 1; 
     }
     else{
       parser_error("could not parse", lexed_buffer[*i]);

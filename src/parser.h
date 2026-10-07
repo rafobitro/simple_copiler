@@ -12,4 +12,5 @@ int parse_asigner(int *i);
 int parse_statements(int *i, bool function);
 int parse_fundef(int *i);
 int parse_funcall(int *i);
+int parse_branch(int *i);
 int parser(void);

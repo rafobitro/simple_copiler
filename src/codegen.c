@@ -115,3 +115,21 @@ void codegen_function_call(char* name){
   append_text_buffer(main_buffer, name);
   append_text_buffer(main_buffer, "\n");
 }
+
+void codegen_load_brunch_value(Token t, char* reg ){
+ if(t.type == NUMBER || t.type == CHAR){
+    append_text_buffer(main_buffer, "li ");
+    append_text_buffer(main_buffer, reg);
+    append_text_buffer(main_buffer, ", ");
+    append_text_buffer(main_buffer, t.word);
+    append_text_buffer(main_buffer, "\n");
+  }
+  else{// variable 
+    append_text_buffer(main_buffer, "la $t0, ");
+    append_text_buffer(main_buffer, t.word);
+    append_text_buffer(main_buffer, "\n");
+    append_text_buffer(main_buffer, "lw ");
+    append_text_buffer(main_buffer, reg);
+    append_text_buffer(main_buffer, ", 0($t0)\n");
+  }
+}

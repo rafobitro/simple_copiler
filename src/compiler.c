@@ -51,7 +51,7 @@ int main(int args,char *argv[]){
   
   if(file_to_buffer(src_file))return 1;
   if(lexer())return 1;
-  if(parser());//return 1;
+  if(parser());return 1;
  
   append_text_buffer(main_buffer,"li $v0, 10\n");
   append_text_buffer(main_buffer,"syscall\n");
