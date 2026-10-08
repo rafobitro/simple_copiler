@@ -51,7 +51,7 @@ int main(int args,char *argv[]){
   
   if(file_to_buffer(src_file))return 1;
   if(lexer())return 1;
-  if(parser());return 1;
+  if(parser())return 1;
  
   append_text_buffer(main_buffer,"li $v0, 10\n");
   append_text_buffer(main_buffer,"syscall\n");
@@ -64,7 +64,7 @@ int main(int args,char *argv[]){
   text_buffer_to_file(main_buffer,outputptr);
   fclose(outputptr);
   
-  lexer_debug();
+  //lexer_debug();//i need make this more beutefule orgonise and readable 
     for(int i=0;i<lexed_count;i++)
     free(lexed_buffer[i].word);
     free(source_buffer);

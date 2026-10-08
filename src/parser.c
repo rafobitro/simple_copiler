@@ -257,6 +257,11 @@ int parse_branch(int *i){
       (*i)++;
     }
   }
+  if(*i>=lexed_count || lexed_buffer[*i].type != RPAREN){
+    parser_error("brunch never closed with ')'", lexed_buffer[*i-1]);
+    return 1;
+  }
+   (*i)++;
 
   if(*i>=lexed_count || lexed_buffer[*i].type != START){
     parser_error("expected '{' to start branch body", lexed_buffer[*i-1]);
@@ -305,7 +310,7 @@ int parse_statements(int *i, bool function){
       if(parse_funcall(i)) return 1;
     }
     else if(lexed_buffer[*i].type == IF){
-      if(parse_branch)return 1; 
+      if(parse_branch(i))return 1; 
     }
     else{
       parser_error("could not parse", lexed_buffer[*i]);
