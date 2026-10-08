@@ -230,12 +230,19 @@ static char* int_to_string(int num) {
     return str;
 }
 
-int parse_branch(int *i){
+int parse_branch(int *i,bool is_loop){
   
   int line = lexed_buffer[*i].line;
-  char* name="IF";
+  char* name="BRUNCH";
   (*i)++;
-  
+  if(is_loop){
+    append_text_buffer(main_buffer, "START_");
+    append_text_buffer(main_buffer, name);
+    append_text_buffer(main_buffer, int_to_string(line));
+    append_text_buffer(main_buffer, ":\n");
+
+  }
+
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
     parser_error("expected '(' after function call", lexed_buffer[*i-1]);
     return 1;
@@ -275,6 +282,13 @@ int parse_branch(int *i){
   append_text_buffer(main_buffer, "\n");
 
   if(parse_statements(i, true)) return 1;
+  
+  if(is_loop){
+    append_text_buffer(main_buffer, "j START_");
+    append_text_buffer(main_buffer, name);
+    append_text_buffer(main_buffer, int_to_string(line));
+    append_text_buffer(main_buffer, "\n");
+  }
 
   append_text_buffer(main_buffer, name);
   append_text_buffer(main_buffer, int_to_string(line));
@@ -310,7 +324,10 @@ int parse_statements(int *i, bool function){
       if(parse_funcall(i)) return 1;
     }
     else if(lexed_buffer[*i].type == IF){
-      if(parse_branch(i))return 1; 
+      if(parse_branch(i,false))return 1; 
+    }
+    else if(lexed_buffer[*i].type == LOOP){
+      if(parse_branch(i,true))return 1; 
     }
     else{
       parser_error("could not parse", lexed_buffer[*i]);
