@@ -3,6 +3,20 @@
 
 Experimentally testing compiler building.
 
+
+## TO DO
+not lot of things left to do language is alredy turing complite . 7 big comits or oproximatly week or 2 work .
+
+
+
+2	; comments in the lexer	
+5	== != < > (and <= >=) in lexer, parser, codegen	
+3	Function return values, plus x = #fn(...)	
+4	%variable in inline asm	
+1	Include	
+6	Standard library	
+7	Snake	
+
 ## About
 
 This is a compiler for my new language, and it is the first compiler I have made.
