@@ -8,6 +8,9 @@
 
 #define MAX_PARAMS 4
 
+
+static int label_counter = 0;
+
 bool is_variable_type_exsist(char* word){
     if(strcmp(word,"number") ==0)
       return true;
@@ -67,6 +70,10 @@ int parse_asigner(int *i){
   }
   if(lexed_buffer[*i].type==ASIGNER){
     (*i)++;
+    if(*i>=lexed_count){
+      parser_error("forgot to write a value afther asigner", lexed_buffer[*i-1]);
+      return 1;
+    }
     if(lexed_buffer[*i].type==NUMBER || lexed_buffer[*i].type==CHAR){
       asign_variable(name,lexed_buffer[*i].word);
       (*i)++;
@@ -81,8 +88,16 @@ int parse_asigner(int *i){
   else if(lexed_buffer[*i].type==ARRAY_NUMBER){
     char* array_number=lexed_buffer[*i].word;
     (*i)++;
+    if(*i>=lexed_count){
+      parser_error("forgot to finish array assignment", lexed_buffer[*i-1]);
+      return 1;
+    }
     if(lexed_buffer[*i].type==ASIGNER){
       (*i)++;
+      if(*i>=lexed_count){
+        parser_error("forgot to write a value afther asigner", lexed_buffer[*i-1]);
+        return 1;
+      }
       if(lexed_buffer[*i].type==NUMBER || lexed_buffer[*i].type==CHAR ){
         asign_variable_array(name,lexed_buffer[*i].word,array_number);
         (*i)++;
@@ -93,6 +108,10 @@ int parse_asigner(int *i){
         return 1;
 
       }
+    }
+    else{
+      parser_error("array element must be followed by '='", lexed_buffer[*i-1]);
+      return 1;
     }
   }
   else{
@@ -155,6 +174,10 @@ int parse_fundef(int *i){
 
 
   codegen_function_start(name);
+
+  append_text_buffer(main_buffer, "addi $sp, $sp, -4\n");
+  append_text_buffer(main_buffer, "sw $ra, 0($sp)\n");
+
   for(int p=0; p<param_count; p++){ 
     declar_variable(param_names[p]);
   }
@@ -163,6 +186,9 @@ int parse_fundef(int *i){
   }
 
   if(parse_statements(i, true)) return 1;
+
+  append_text_buffer(main_buffer, "lw $ra, 0($sp)\n");
+  append_text_buffer(main_buffer, "addi $sp, $sp, 4\n");
 
   codegen_function_end(name);
   return 0;
@@ -232,19 +258,19 @@ static char* int_to_string(int num) {
 
 int parse_branch(int *i,bool is_loop){
   
-  int line = lexed_buffer[*i].line;
+  int id = label_counter++;
   char* name="BRUNCH";
   (*i)++;
   if(is_loop){
     append_text_buffer(main_buffer, "START_");
     append_text_buffer(main_buffer, name);
-    append_text_buffer(main_buffer, int_to_string(line));
+    append_text_buffer(main_buffer, int_to_string(id));
     append_text_buffer(main_buffer, ":\n");
 
   }
 
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
-    parser_error("expected '(' after function call", lexed_buffer[*i-1]);
+    parser_error("expected '(' after ? or ??", lexed_buffer[*i-1]);
     return 1;
   }
   (*i)++;
@@ -256,6 +282,7 @@ int parse_branch(int *i,bool is_loop){
       parser_error("Branches should have 2 values included A and B ", lexed_buffer[*i]);
       return 1;
     }
+
     codegen_load_brunch_value(lexed_buffer[*i], (j==0 ? "$t1" : "$t2") );
     (*i)++;
  
@@ -278,7 +305,7 @@ int parse_branch(int *i,bool is_loop){
 
   append_text_buffer(main_buffer, "bne $t1, $t2, ");
   append_text_buffer(main_buffer, name);
-  append_text_buffer(main_buffer, int_to_string(line));
+  append_text_buffer(main_buffer, int_to_string(id));
   append_text_buffer(main_buffer, "\n");
 
   if(parse_statements(i, true)) return 1;
@@ -286,12 +313,12 @@ int parse_branch(int *i,bool is_loop){
   if(is_loop){
     append_text_buffer(main_buffer, "j START_");
     append_text_buffer(main_buffer, name);
-    append_text_buffer(main_buffer, int_to_string(line));
+    append_text_buffer(main_buffer, int_to_string(id));
     append_text_buffer(main_buffer, "\n");
   }
 
   append_text_buffer(main_buffer, name);
-  append_text_buffer(main_buffer, int_to_string(line));
+  append_text_buffer(main_buffer, int_to_string(id));
   append_text_buffer(main_buffer, ":\n");
   return 0; 
 }
@@ -320,7 +347,9 @@ int parse_statements(int *i, bool function){
     else if(lexed_buffer[*i].type == FUN_DEF){
       if(parse_fundef(i)) return 1;
     }
-    else if(lexed_buffer[*i].type == FUNCTION){
+    else if(lexed_buffer[*i].type == FUNCTION){ //inline asembly and usage of a function pased variables in them ?
+                                                //return is nececerly . idea i think is creating return variable  in function call time and with defoult value of 0 ? 
+                                                //need to threat function us values mening alow use same way us numbers variables and chars
       if(parse_funcall(i)) return 1;
     }
     else if(lexed_buffer[*i].type == IF){
@@ -328,7 +357,8 @@ int parse_statements(int *i, bool function){
     }
     else if(lexed_buffer[*i].type == LOOP){
       if(parse_branch(i,true))return 1; 
-    }
+    }//need include and file name wich should just put code in place of include .
+    //need coment
     else{
       parser_error("could not parse", lexed_buffer[*i]);
       return 1;
@@ -343,5 +373,6 @@ int parse_statements(int *i, bool function){
 
 int parser(){
   int i = 0;
+  label_counter = 0;
   return parse_statements(&i, false);
 }
