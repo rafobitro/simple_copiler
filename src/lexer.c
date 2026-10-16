@@ -36,6 +36,11 @@ int lexer(){
       i++;
       continue;
     }
+    else if(c==';'){//coment
+      while(source_buffer[i]!='\n'){
+        i++;
+      }
+    }
     else if(c=='='){ 
       lexed_buffer[lexed_count].type=ASIGNER;
       copy_to_lexed_buffer(i,i+1,lexed_count);
@@ -211,7 +216,6 @@ int lexer(){
       i++;
       continue;
     }
-    
     else{
       printf("unrecognise symbole  ");
       printf("%c\n",source_buffer[i]);
@@ -258,7 +262,7 @@ bool is_digit(char c){
 
 bool is_seperator(char c){
   return ((c==' ') || (c=='"') || (c=='\'') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0')
-       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') || (c=='}') || (c=='?'));
+       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') || (c=='}') || (c=='?') || (c==';'));
 }
 
 
