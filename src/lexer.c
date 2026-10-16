@@ -41,12 +41,63 @@ int lexer(){
         i++;
       }
     }
-    else if(c=='='){ 
-      lexed_buffer[lexed_count].type=ASIGNER;
-      copy_to_lexed_buffer(i,i+1,lexed_count);
+    else if(c=='='){
+      if(c2=='='){
+        lexed_buffer[lexed_count].type=EQUAL;
+        copy_to_lexed_buffer(i,i+2,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i+=2;
+      }
+      else{
+        lexed_buffer[lexed_count].type=ASIGNER;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+      }
+      continue;
+    }
+    else if(c=='<'){
+      if(c2=='='){
+        lexed_buffer[lexed_count].type=SMALLER_OR_EQUAL;
+        copy_to_lexed_buffer(i,i+2,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i+=2;
+      }
+      else{
+        lexed_buffer[lexed_count].type=SMALLER;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+      }
+      continue;
+    }
+    else if(c=='>'){
+      if(c2=='='){
+        lexed_buffer[lexed_count].type=BIGER_OR_EQUAL;
+        copy_to_lexed_buffer(i,i+2,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i+=2;
+      }
+      else{
+        lexed_buffer[lexed_count].type=BIGER;
+        copy_to_lexed_buffer(i,i+1,lexed_count);
+        lexed_buffer[lexed_count].line=line_count;
+        lexed_count++;
+        i++;
+      }
+      continue;
+    }
+    else if(c=='!' && c2=='='){
+      lexed_buffer[lexed_count].type=NOT_EQUAL;
+      copy_to_lexed_buffer(i,i+2,lexed_count);
       lexed_buffer[lexed_count].line=line_count;
       lexed_count++;
-      i++;
+      i+=2;
       continue;
     }
     else if(is_digit(c)){
@@ -262,7 +313,8 @@ bool is_digit(char c){
 
 bool is_seperator(char c){
   return ((c==' ') || (c=='"') || (c=='\'') || (c=='\n') || (c=='\t') || (c=='\r') || (c=='\0')
-       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') || (c=='}') || (c=='?') || (c==';'));
+       || (c=='=') || (c=='[') || (c==']') || (c=='(') || (c==')') || (c==',') || (c=='{') 
+       || (c=='}') || (c=='?') || (c==';') || (c=='<') || (c=='>') || (c=='!'));
 }
 
 

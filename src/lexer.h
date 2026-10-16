@@ -18,6 +18,12 @@ typedef enum {
   LPAREN, // ( 
   RPAREN, // )
   COMMA, // ,
+  BIGER, // > 
+  BIGER_OR_EQUAL, // >=
+  SMALLER, //<
+  SMALLER_OR_EQUAL, // <=
+  EQUAL, // == 
+  NOT_EQUAL, // !=
   ERROR, // i dont use this
 }TokenType;
 
