@@ -282,24 +282,27 @@ int lexer(){
     return 0;
 }
 
-
-void lexer_debug(){
-  printf("====================LEXER DEBUG====================\n");
-  for(int i=0;i<lexed_count;i++){
-    if (lexed_buffer[i].type==ASEMBLY) printf("STRING\t\t");
-    if (lexed_buffer[i].type==NUMBER) printf("NUMBER\t\t");
-    if (lexed_buffer[i].type==FUNCTION) printf("FUNCTION\t\t");
-    if (lexed_buffer[i].type==VARIABLE) printf("VARIABL\t\t");
-    if (lexed_buffer[i].type==VARIABLE_TYPE) printf("VARIABLE_TYPE\t\t");
-    if (lexed_buffer[i].type==ARRAY_NUMBER) printf("ARRAY_NUMBER\t\t");
-    if (lexed_buffer[i].type==ASIGNER) printf("ASIGNER\t\t");
-    printf("%s",lexed_buffer[i].word);
-    printf("\t\t");
-    printf("%d\n", lexed_buffer[i].line);
-    printf("\n");
-  }
+// more beutefule debug print done by AI
+void lexer_debug() {
+    printf("==================== LEXER DEBUG ====================\n");
+    printf("%-18s | %-20s | Line\n", "TYPE", "WORD");
+    printf("-----------------------------------------------------\n");
+    
+    for (int i = 0; i < lexed_count; i++) {
+        TokenType type = lexed_buffer[i].type;
+        
+        // Ensure type is within bounds to prevent segmentation faults
+        const char *type_str = (type >= 0 && type <= ERROR) 
+                               ? token_type_names[type] 
+                               : "ERROR";
+        
+        printf("%-18s | %-20s | %d\n", 
+               type_str, 
+               lexed_buffer[i].word ? lexed_buffer[i].word : "(null)", 
+               lexed_buffer[i].line);
+    }
+    printf("=====================================================\n");
 }
-
 
 
 

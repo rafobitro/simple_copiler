@@ -27,6 +27,32 @@ typedef enum {
   ERROR, // i dont use this
 }TokenType;
 
+const static char *token_type_names[] = {
+    "FUNCTION",
+    "VARIABLE_TYPE",
+    "VARIABLE",
+    "NUMBER",
+    "ASIGNER",
+    "ARRAY_NUMBER",
+    "FUN_DEF",
+    "ASEMBLY",
+    "IF",
+    "LOOP",
+    "START",
+    "END",
+    "CHAR",
+    "LPAREN",
+    "RPAREN",
+    "COMMA",
+    "BIGER",
+    "BIGER_OR_EQUAL",
+    "SMALLER",
+    "SMALLER_OR_EQUAL",
+    "EQUAL",
+    "NOT_EQUAL",
+    "ERROR"
+};
+
 typedef struct {
     TokenType type;
     char *word;
