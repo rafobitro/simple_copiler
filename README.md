@@ -9,13 +9,11 @@ not lot of things left to do language is alredy turing complite . 7 big comits o
 
 
 
-2	; comments in the lexer	
-5	== != < > (and <= >=) in lexer, parser, codegen	
-3	Function return values, plus x = #fn(...)	
-4	%variable in inline asm	
-1	Include	
-6	Standard library	
-7	Snake	
+1	Function return values, plus x = #fn(...)	
+2	%variable in inline asm	
+3	Include	
+4	Standard library	
+5	Snake	
 
 ## About
 

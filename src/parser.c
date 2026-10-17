@@ -250,10 +250,14 @@ int parse_funcall(int *i){
   return 0;
 }
 
-static char* int_to_string(int num) {
-    static char str[12];
-    snprintf(str, sizeof(str), "%d", num);
-    return str;
+static bool is_comperison(TokenType type){
+  if(type == EQUAL) return true;
+  if(type == NOT_EQUAL) return true;
+  if(type == BIGER) return true;
+  if(type == BIGER_OR_EQUAL) return true;
+  if(type == SMALLER) return true;
+  if(type == SMALLER_OR_EQUAL) return true;
+  return false;
 }
 
 int parse_branch(int *i,bool is_loop){
@@ -274,7 +278,8 @@ int parse_branch(int *i,bool is_loop){
     return 1;
   }
   (*i)++;
-  
+    
+    TokenType compereson_type;
   //move 2 values to registers 1 and 2 for compereson 
    for(int j=0; j<2; j++){
  
@@ -286,9 +291,16 @@ int parse_branch(int *i,bool is_loop){
     codegen_load_brunch_value(lexed_buffer[*i], (j==0 ? "$t1" : "$t2") );
     (*i)++;
  
-    
-    if(j==0 && *i<lexed_count && lexed_buffer[*i].type == COMMA){
-      (*i)++;
+    if(j==0 &&  *i<lexed_count ){
+      if(is_comperison(lexed_buffer[*i].type)){
+        compereson_type=lexed_buffer[*i].type;
+        (*i)++;
+      
+      }
+      else{
+        parser_error(" ther was no compereson in brunch ", lexed_buffer[*i-1]);
+        return 1;
+      }
     }
   }
   if(*i>=lexed_count || lexed_buffer[*i].type != RPAREN){
@@ -302,11 +314,8 @@ int parse_branch(int *i,bool is_loop){
     return 1;
   }
   (*i)++;
-
-  append_text_buffer(main_buffer, "bne $t1, $t2, ");
-  append_text_buffer(main_buffer, name);
-  append_text_buffer(main_buffer, int_to_string(id));
-  append_text_buffer(main_buffer, "\n");
+  
+  codegen_compear_values(name, id,compereson_type);
 
   if(parse_statements(i, true)) return 1;
   

@@ -133,3 +133,30 @@ void codegen_load_brunch_value(Token t, char* reg ){
     append_text_buffer(main_buffer, ", 0($t0)\n");
   }
 }
+
+char* int_to_string(int num) {
+    static char str[12];
+    snprintf(str, sizeof(str), "%d", num);
+    return str;
+}
+
+void codegen_compear_values(char*name, int id,TokenType compereson_type){
+  if(compereson_type==EQUAL)
+    append_text_buffer(main_buffer, "bne $t1, $t2, ");
+  if(compereson_type==NOT_EQUAL)
+    append_text_buffer(main_buffer, "beq $t1, $t2, ");
+  if(compereson_type==BIGER)
+    append_text_buffer(main_buffer, "ble $t1, $t2, ");
+  if(compereson_type==BIGER_OR_EQUAL)
+    append_text_buffer(main_buffer, "blt $t1, $t2, ");
+  if(compereson_type==SMALLER)
+    append_text_buffer(main_buffer, "bge $t1, $t2, ");
+  if(compereson_type==SMALLER_OR_EQUAL)
+    append_text_buffer(main_buffer, "bgt $t1, $t2, ");
+  //append_text_buffer(main_buffer, "bne $t1, $t2, ");
+  append_text_buffer(main_buffer, name);
+  append_text_buffer(main_buffer, int_to_string(id));
+  append_text_buffer(main_buffer, "\n");
+
+}
+

@@ -24,7 +24,7 @@ typedef enum {
   SMALLER_OR_EQUAL, // <=
   EQUAL, // == 
   NOT_EQUAL, // !=
-  ERROR, // i dont use this
+  ERROR, // i use this us end point 
 }TokenType;
 
 const static char *token_type_names[] = {

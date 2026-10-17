@@ -282,7 +282,7 @@ int lexer(){
     return 0;
 }
 
-// more beutefule debug print done by AI
+// more beutefule debug print done by Gamini
 void lexer_debug() {
     printf("==================== LEXER DEBUG ====================\n");
     printf("%-18s | %-20s | Line\n", "TYPE", "WORD");
