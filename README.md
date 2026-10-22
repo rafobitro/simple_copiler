@@ -202,7 +202,12 @@ Here is a simple Hello World example in the current version of `.yu`. Look at th
 
 Also, look at the current design of the function call I told you about. I am declaring the function input by name and passing the value by pointer, which is kind of meh. This is more of a design problem than a technical problem.
 
+
 ```text
+%basic.yu%
+
+; this is working exemple of my programing language printing hello world infintily
+
 $number greeting[13]
 greeting[0] = 'H'
 greeting[1] = 'e'
@@ -218,23 +223,11 @@ greeting[10] = 'd'
 greeting[11] = '!'
 greeting[12] = 0
 
-@print (str) {
-   
-  "
-    lw $t0, str
-  print_loop:
-    lw $t1, 0($t0)
-    beqz $t1, end_print
-    move $a0, $t1
-    li $v0, 11
-    syscall
-    addi $t0, $t0, 4
-    j print_loop
-  end_print:
-  "
-
+$number i=0
+??(a>0){
+#print(greeting[])
 }
 
-#print(greeting[])
+
 ```
 
