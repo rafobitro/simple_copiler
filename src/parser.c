@@ -7,9 +7,13 @@
 #include "text_buffer.h"
 
 #define MAX_PARAMS 4
+#define MAX_VARS 1000
 
 
 static int label_counter = 0;
+
+static char *declared[MAX_VARS];
+static int declared_count = 0;
 
 bool is_variable_type_exsist(char* word){
     if(strcmp(word,"number") ==0)
@@ -28,7 +32,66 @@ void parser_error(char* message, Token token) {
     printf("  -> Token  : '%s'\n\033[0m", token.word);
 }
 
-int parse_declaration(int *i){
+static char* make_label(char* scope, char* name){
+  size_t scope_len = strlen(scope);
+  char* label = malloc(scope_len + strlen(name) + 3);
+  if(label == NULL) return NULL;
+  strcpy(label, scope);
+  strcat(label, "__");
+  strcat(label, name);
+  return label;
+}
+
+static char* find_label(char* label){
+  for(int k=0; k<declared_count; k++){
+    if(strcmp(declared[k], label) == 0)
+      return declared[k];
+  }
+  return NULL;
+}
+
+static char* declare_name(char** scopes, Token t){
+  char* label = make_label(scopes[0], t.word);
+  if(label == NULL){
+    parser_error("no space to alloc variable name", t);
+    return NULL;
+  }
+  if(find_label(label) != NULL){
+    parser_error("variable is already declared in this scope", t);
+    free(label);
+    return NULL;
+  }
+  if(declared_count >= MAX_VARS){
+    parser_error("too many variables", t);
+    free(label);
+    return NULL;
+  }
+  declared[declared_count++] = label;
+  return label;
+}
+
+static char* lookup_name(char** scopes, Token t){
+  for(int s=0; scopes[s] != NULL; s++){
+    char* label = make_label(scopes[s], t.word);
+    if(label == NULL){
+      parser_error("no space to alloc variable name", t);
+      return NULL;
+    }
+    char* found = find_label(label);
+    free(label);
+    if(found != NULL) return found;
+  }
+  parser_error("variable was never declared", t);
+  return NULL;
+}
+
+void parser_free(void){
+  for(int k=0; k<declared_count; k++)
+    free(declared[k]);
+  declared_count = 0;
+}
+
+int parse_declaration(int *i, char** scopes){
     (*i)++; 
     if(*i>=lexed_count){
       parser_error("forgot to write variable name, could not parse", lexed_buffer[*i-1]);
@@ -38,7 +101,9 @@ int parse_declaration(int *i){
        parser_error("invalid structure after variable type, you should write a variable name", lexed_buffer[*i]);
       return 1;
     }
-    char* name=lexed_buffer[*i].word;
+
+    char* name = declare_name(scopes, lexed_buffer[*i]);
+    if(name == NULL) return 1;
     (*i)++;
     if(*i>=lexed_count || (lexed_buffer[*i].type != ASIGNER && lexed_buffer[*i].type != ARRAY_NUMBER)){
       declar_variable( name);
@@ -60,9 +125,9 @@ int parse_declaration(int *i){
   return 0;
 }
 
-int parse_asigner(int *i){
-  char* name = lexed_buffer[*i].word;
-  //if(!is_variable_declared) return 1;
+int parse_asigner(int *i, char** scopes){
+  char* name = lookup_name(scopes, lexed_buffer[*i]);
+  if(name == NULL) return 1;
   (*i)++;
   if(*i>=lexed_count){
     parser_error("forgot to finish expresion, could not parse", lexed_buffer[*i-1]);
@@ -124,9 +189,19 @@ int parse_asigner(int *i){
 }
 
 
-int parse_fundef(int *i){
+int parse_fundef(int *i, char** scopes){
+  if(strcmp(scopes[0], "main") != 0){
+    parser_error("you can not define a function inside a function", lexed_buffer[*i]);
+    return 1;
+  }
   char* name = lexed_buffer[*i].word;
-  // if(!is_function_defind()) return 1;
+  if(strcmp(name, "main") == 0){
+    parser_error("main is the name of the global scope, use another function name", lexed_buffer[*i]);
+    return 1;
+  }
+ 
+  char* function_scopes[3] = { name, "main", NULL };
+
   (*i)++;
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
     parser_error("expected '(' after function name", lexed_buffer[*i-1]);
@@ -147,8 +222,9 @@ int parse_fundef(int *i){
       return 1;
     }
 
-
-    param_names[param_count++] = lexed_buffer[*i].word;
+    char* param_label = declare_name(function_scopes, lexed_buffer[*i]);
+    if(param_label == NULL) return 1;
+    param_names[param_count++] = param_label;
     (*i)++;
 
     if(*i<lexed_count && lexed_buffer[*i].type == COMMA){
@@ -185,7 +261,7 @@ int parse_fundef(int *i){
     codegen_function_param_store(param_names[p], p);
   }
 
-  if(parse_statements(i, true)) return 1;
+  if(parse_statements(i, true, function_scopes)) return 1;
 
   append_text_buffer(main_buffer, "lw $ra, 0($sp)\n");
   append_text_buffer(main_buffer, "addi $sp, $sp, 4\n");
@@ -195,7 +271,7 @@ int parse_fundef(int *i){
 }
 
 
-int parse_funcall(int *i){
+int parse_funcall(int *i, char** scopes){
   // i am not chacking if  function exsist or not i am not chacking ig i use rigth amout of parameters or not yet .
   // meybe i will do second run parser cheacker to do it . 
   char *name = lexed_buffer[*i].word;//REMEMBER TO ADD LINE NUMBER
@@ -218,11 +294,15 @@ int parse_funcall(int *i){
       return 1;
     }
 
-        char *arg_word = lexed_buffer[*i].word;
+    char *arg_word = lexed_buffer[*i].word;
     TokenType arg_type = lexed_buffer[*i].type;
+    if(arg_type == VARIABLE){
+      arg_word = lookup_name(scopes, lexed_buffer[*i]);
+      if(arg_word == NULL) return 1;
+    }
     (*i)++;
 
-        if(*i<lexed_count && lexed_buffer[*i].type == ARRAY_NUMBER && lexed_buffer[*i].word[0] == '\0'){
+    if(*i<lexed_count && lexed_buffer[*i].type == ARRAY_NUMBER && lexed_buffer[*i].word[0] == '\0'){
       codegen_load_arg_address(arg_word, arg_count);
       (*i)++; 
     }
@@ -260,7 +340,7 @@ static bool is_comperison(TokenType type){
   return false;
 }
 
-int parse_branch(int *i,bool is_loop){
+int parse_branch(int *i,bool is_loop, char** scopes){
   
   int id = label_counter++;
   char* name="BRUNCH";
@@ -288,7 +368,12 @@ int parse_branch(int *i,bool is_loop){
       return 1;
     }
 
-    codegen_load_brunch_value(lexed_buffer[*i], (j==0 ? "$t1" : "$t2") );
+    Token value = lexed_buffer[*i];
+    if(value.type == VARIABLE){
+      value.word = lookup_name(scopes, lexed_buffer[*i]);
+      if(value.word == NULL) return 1;
+    }
+    codegen_load_brunch_value(value, (j==0 ? "$t1" : "$t2") );
     (*i)++;
  
     if(j==0 &&  *i<lexed_count ){
@@ -317,7 +402,7 @@ int parse_branch(int *i,bool is_loop){
   
   codegen_compear_values(name, id,compereson_type);
 
-  if(parse_statements(i, true)) return 1;
+  if(parse_statements(i, true, scopes)) return 1;
   
   if(is_loop){
     append_text_buffer(main_buffer, "j START_");
@@ -333,7 +418,7 @@ int parse_branch(int *i,bool is_loop){
 }
 
 
-int parse_statements(int *i, bool function){
+int parse_statements(int *i, bool function, char** scopes){
   while((*i)<lexed_count){
     if(lexed_buffer[*i].type == END){
       if(!function){
@@ -344,30 +429,29 @@ int parse_statements(int *i, bool function){
       return 0;
     }
     else if(lexed_buffer[*i].type==VARIABLE_TYPE && is_variable_type_exsist(lexed_buffer[*i].word)){
-      if (parse_declaration(i)) return 1;
+      if (parse_declaration(i, scopes)) return 1;
     }
     else if(lexed_buffer[*i].type == ASEMBLY){
       append_text_buffer(main_buffer, lexed_buffer[*i].word);
       (*i)++;
     }
     else if(lexed_buffer[*i].type == VARIABLE){
-      if(parse_asigner(i)) return 1;
+      if(parse_asigner(i, scopes)) return 1;
     }
     else if(lexed_buffer[*i].type == FUN_DEF){
-      if(parse_fundef(i)) return 1;
+      if(parse_fundef(i, scopes)) return 1;
     }
     else if(lexed_buffer[*i].type == FUNCTION){ //inline asembly and usage of a function pased variables in them ?
                                                 //return is nececerly . idea i think is creating return variable  in function call time and with defoult value of 0 ? 
                                                 //need to threat function us values mening alow use same way us numbers variables and chars
-      if(parse_funcall(i)) return 1;
+      if(parse_funcall(i, scopes)) return 1;
     }
     else if(lexed_buffer[*i].type == IF){
-      if(parse_branch(i,false))return 1; 
+      if(parse_branch(i,false, scopes))return 1; 
     }
     else if(lexed_buffer[*i].type == LOOP){
-      if(parse_branch(i,true))return 1; 
-    }//need include and file name wich should just put code in place of include .
-    //need coment
+      if(parse_branch(i,true, scopes))return 1; 
+    }
     else{
       parser_error("could not parse", lexed_buffer[*i]);
       return 1;
@@ -383,5 +467,6 @@ int parse_statements(int *i, bool function){
 int parser(){
   int i = 0;
   label_counter = 0;
-  return parse_statements(&i, false);
+  char* global_scopes[2] = { "main", NULL };
+  return parse_statements(&i, false, global_scopes);
 }
