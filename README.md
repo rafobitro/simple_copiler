@@ -9,11 +9,9 @@ not lot of things left to do language is alredy turing complite . 7 big comits o
 
 
 
-1	Function return values, plus x = #fn(...)	
-2	%variable in inline asm	
-3	Include	
-4	Standard library	
-5	Snake	
+1 Function return values, plus x = #fn(...)
+2 Standard library
+3 Snake
 
 ## About
 

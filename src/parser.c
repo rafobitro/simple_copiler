@@ -85,6 +85,78 @@ static char* lookup_name(char** scopes, Token t){
   return NULL;
 }
 
+//// NEW: expand_asm. Copies the asm text and replaces every %name with the label of that variable
+//// (found with lookup_name, so scopes work). %% gives a literal %. Returns a malloc'd string or NULL on error.
+static char* expand_asm(Token asm_token, char** scopes){
+  char* text = asm_token.word;
+  size_t cap = strlen(text) * 2 + 64;
+  size_t len = 0;
+  char* out = malloc(cap);
+  if(out == NULL){
+    parser_error("no space to alloc asembly text", asm_token);
+    return NULL;
+  }
+
+  for(size_t k=0; text[k] != '\0'; ){
+    const char* piece;
+    size_t piece_len;
+    char one[2];
+
+    if(text[k] == '%' && text[k+1] == '%'){
+      one[0] = '%'; one[1] = '\0';
+      piece = one; piece_len = 1;
+      k += 2;
+    }
+    else if(text[k] == '%'){
+      size_t start = k + 1;
+      size_t end = start;
+      while(is_letter(text[end]) || is_digit(text[end])) end++;
+      if(end == start){
+        parser_error("expected a variable name after % in asembly, use %% for a real %", asm_token);
+        free(out);
+        return NULL;
+      }
+      Token name_token = asm_token;
+      name_token.word = malloc(end - start + 1);
+      if(name_token.word == NULL){
+        parser_error("no space to alloc variable name", asm_token);
+        free(out);
+        return NULL;
+      }
+      memcpy(name_token.word, text + start, end - start);
+      name_token.word[end - start] = '\0';
+
+      char* label = lookup_name(scopes, name_token);
+      free(name_token.word);
+      if(label == NULL){
+        free(out);
+        return NULL;
+      }
+      piece = label; piece_len = strlen(label);
+      k = end;
+    }
+    else{
+      piece = text + k; piece_len = 1;
+      k++;
+    }
+
+    if(len + piece_len + 2 > cap){
+      cap = (len + piece_len + 2) * 2;
+      char* bigger = realloc(out, cap);
+      if(bigger == NULL){
+        parser_error("no space to alloc asembly text", asm_token);
+        free(out);
+        return NULL;
+      }
+      out = bigger;
+    }
+    memcpy(out + len, piece, piece_len);
+    len += piece_len;
+  }
+  out[len] = '\0';
+  return out;
+}
+
 void parser_free(void){
   for(int k=0; k<declared_count; k++)
     free(declared[k]);
@@ -432,7 +504,12 @@ int parse_statements(int *i, bool function, char** scopes){
       if (parse_declaration(i, scopes)) return 1;
     }
     else if(lexed_buffer[*i].type == ASEMBLY){
-      append_text_buffer(main_buffer, lexed_buffer[*i].word);
+     
+      char* expanded = expand_asm(lexed_buffer[*i], scopes);
+      if(expanded == NULL) return 1;
+      append_text_buffer(main_buffer, expanded);
+      append_text_buffer(main_buffer, "\n");
+      free(expanded);
       (*i)++;
     }
     else if(lexed_buffer[*i].type == VARIABLE){

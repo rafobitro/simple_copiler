@@ -6,7 +6,7 @@
 
 void declar_variable(char* name){
   append_text_buffer(declaration_buffer,name);
-  append_text_buffer(declaration_buffer,": .word");
+  append_text_buffer(declaration_buffer,": .word 0");
   append_text_buffer(declaration_buffer,"\n");
 }
 
@@ -78,9 +78,9 @@ void codegen_function_param_store(char* name, int index){
   append_text_buffer(main_buffer, "la $t0, ");
   append_text_buffer(main_buffer, name);
   append_text_buffer(main_buffer, "\n");
-  //append_text_buffer(main_buffer, "sw ");
-  //append_text_buffer(main_buffer, arg_regs[index]);
-  //append_text_buffer(main_buffer, ", 0($t0)\n");
+  append_text_buffer(main_buffer, "sw ");
+  append_text_buffer(main_buffer, arg_regs[index]);
+  append_text_buffer(main_buffer, ", 0($t0)\n");
 }
 
 void codegen_load_arg(char* value, TokenType type, int index){
