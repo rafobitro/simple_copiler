@@ -1,4 +1,7 @@
-$number greeting[13]
+
+%basic.yu%
+
+$number greeting[14]
 greeting[0] = 'H'
 greeting[1] = 'e'
 greeting[2] = 'l'
@@ -11,24 +14,16 @@ greeting[8] = 'r'
 greeting[9] = 'l'
 greeting[10] = 'd'
 greeting[11] = '!'
-greeting[12] = 0
+greeting[12] = ' '
+greeting[13] = 0
 
+
+
+$number i = 1
+
+??(i<3){
+i = #add(i,1)
 #print(greeting[])
-
-@print (str) {
-   
-  "
-    lw $t0, str
-  print_loop:
-    lw $t1, 0($t0)
-    beqz $t1, end_print
-    move $a0, $t1
-    li $v0, 11
-    syscall
-    addi $t0, $t0, 4
-    j print_loop
-  end_print:
-  "
 
 }
 

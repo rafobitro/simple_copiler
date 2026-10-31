@@ -8,10 +8,8 @@ Experimentally testing compiler building.
 not lot of things left to do language is alredy turing complite . 7 big comits or oproximatly week or 2 work .
 
 
-
-1 Function return values, plus x = #fn(...)
 2 Standard library
-3 Snake
+4 Snake
 
 ## About
 

@@ -1,0 +1,25 @@
+;this is a basic library
+@print(str){
+  "
+    lw $t0, %str
+  print_loop:
+    lw $t1, 0($t0)
+    beqz $t1, end_print
+    move $a0, $t1
+    li $v0, 11
+    syscall
+    addi $t0, $t0, 4
+    j print_loop
+  end_print:
+  "
+}
+
+
+@add(a,b){
+  "
+    lw $t0, %a
+    lw $t1, %b
+    add $t0, $t0, $t1
+    sw $t0, %return
+  "
+}

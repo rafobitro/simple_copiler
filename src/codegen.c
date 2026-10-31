@@ -163,3 +163,14 @@ void codegen_compear_values(char*name, int id,TokenType compereson_type){
 
 }
 
+void asign_variable_from_variable(char* dst, char* src){
+  append_text_buffer(main_buffer,"la $t0, ");
+  append_text_buffer(main_buffer,src);
+  append_text_buffer(main_buffer,"\n");
+  append_text_buffer(main_buffer,"lw $t1, 0($t0)\n");
+  append_text_buffer(main_buffer,"la $t0, ");
+  append_text_buffer(main_buffer,dst);
+  append_text_buffer(main_buffer,"\n");
+  append_text_buffer(main_buffer,"sw $t1, 0($t0)\n");
+}
+

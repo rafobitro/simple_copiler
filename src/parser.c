@@ -85,8 +85,6 @@ static char* lookup_name(char** scopes, Token t){
   return NULL;
 }
 
-//// NEW: expand_asm. Copies the asm text and replaces every %name with the label of that variable
-//// (found with lookup_name, so scopes work). %% gives a literal %. Returns a malloc'd string or NULL on error.
 static char* expand_asm(Token asm_token, char** scopes){
   char* text = asm_token.word;
   size_t cap = strlen(text) * 2 + 64;
@@ -163,6 +161,20 @@ void parser_free(void){
   declared_count = 0;
 }
 
+static int assign_call_result(int *i, char** scopes, char* dst){
+  Token call_token = lexed_buffer[*i];
+  char* fname = call_token.word;
+  if(parse_funcall(i, scopes)) return 1;
+  char* ret_label = make_label(fname, "return");
+  if(ret_label == NULL){
+    parser_error("no space to alloc name", call_token);
+    return 1;
+  }
+  asign_variable_from_variable(dst, ret_label);
+  free(ret_label);
+  return 0;
+}
+
 int parse_declaration(int *i, char** scopes){
     (*i)++; 
     if(*i>=lexed_count){
@@ -190,17 +202,15 @@ int parse_declaration(int *i, char** scopes){
       if(lexed_buffer[*i].type==NUMBER || lexed_buffer[*i].type==CHAR){
       asign_variable(name,lexed_buffer[*i].word);
       (*i)++;
-
+      }
+      else if(lexed_buffer[*i].type==FUNCTION){
+        if(assign_call_result(i, scopes, name)) return 1;
+      }
+      else{
+        parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
+        return 1;
+      }
     }
-    else if(lexed_buffer[*i].type==FUNCTION){
-      asign_variable(name,make_label(lexed_buffer[*i].word,"return"));
-      (*i)++;
-    }
-    else{
-      parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
-      return 1;
-
-    }    }
     else{
       declar_array( name , lexed_buffer[*i].word);
       (*i)++;
@@ -228,8 +238,7 @@ int parse_asigner(int *i, char** scopes){
 
     }
     else if(lexed_buffer[*i].type==FUNCTION){
-      asign_variable(name,make_label(lexed_buffer[*i].word,"return"));
-      (*i)++;
+      if(assign_call_result(i, scopes, name)) return 1;
     }
     else{
       parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
@@ -287,9 +296,14 @@ int parse_fundef(int *i, char** scopes){
     return 1;
   }
   
-  declar_variable(make_label(name,"return"));
- 
   char* function_scopes[3] = { name, "main", NULL };
+
+  //just adding new name__return variable to code and also adding it to a lookup table
+  Token ret_token = lexed_buffer[*i];
+  ret_token.word = "return";
+  char* ret_label = declare_name(function_scopes, ret_token);
+  if(ret_label == NULL) return 1;
+  declar_variable(ret_label);
 
   (*i)++;
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
@@ -366,7 +380,15 @@ int parse_funcall(int *i, char** scopes){
   char *name = lexed_buffer[*i].word;//REMEMBER TO ADD LINE NUMBER
   (*i)++;
 
-  asign_variable(make_label(name,"return"),0);
+  
+  //init return value to 0
+  char* zero_label = make_label(name,"return");
+  if(zero_label == NULL){
+    parser_error("no space to alloc name", lexed_buffer[*i-1]);
+    return 1;
+  }
+  asign_variable(zero_label,"0");
+  free(zero_label);
 
 
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){

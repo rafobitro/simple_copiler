@@ -28,3 +28,4 @@ void codegen_load_arg_address(char* name, int index);
 void codegen_function_call(char* name);
 void codegen_load_brunch_value(Token t, char* reg );
 void codegen_compear_values(char*name, int id, TokenType compereson_type);
+void asign_variable_from_variable(char* dst, char* src);
