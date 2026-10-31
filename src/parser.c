@@ -187,9 +187,20 @@ int parse_declaration(int *i, char** scopes){
         parser_error("forgot to assign value", lexed_buffer[*i - 1]);
         return 1;
       }
+      if(lexed_buffer[*i].type==NUMBER || lexed_buffer[*i].type==CHAR){
       asign_variable(name,lexed_buffer[*i].word);
       (*i)++;
+
     }
+    else if(lexed_buffer[*i].type==FUNCTION){
+      asign_variable(name,make_label(lexed_buffer[*i].word,"return"));
+      (*i)++;
+    }
+    else{
+      parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
+      return 1;
+
+    }    }
     else{
       declar_array( name , lexed_buffer[*i].word);
       (*i)++;
@@ -215,6 +226,10 @@ int parse_asigner(int *i, char** scopes){
       asign_variable(name,lexed_buffer[*i].word);
       (*i)++;
 
+    }
+    else if(lexed_buffer[*i].type==FUNCTION){
+      asign_variable(name,make_label(lexed_buffer[*i].word,"return"));
+      (*i)++;
     }
     else{
       parser_error("you shoiuld write a value afther asigner", lexed_buffer[*i-1]);
@@ -271,6 +286,8 @@ int parse_fundef(int *i, char** scopes){
     parser_error("main is the name of the global scope, use another function name", lexed_buffer[*i]);
     return 1;
   }
+  
+  declar_variable(make_label(name,"return"));
  
   char* function_scopes[3] = { name, "main", NULL };
 
@@ -348,6 +365,9 @@ int parse_funcall(int *i, char** scopes){
   // meybe i will do second run parser cheacker to do it . 
   char *name = lexed_buffer[*i].word;//REMEMBER TO ADD LINE NUMBER
   (*i)++;
+
+  asign_variable(make_label(name,"return"),0);
+
 
   if(*i>=lexed_count || lexed_buffer[*i].type != LPAREN){
     parser_error("expected '(' after function call", lexed_buffer[*i-1]);
